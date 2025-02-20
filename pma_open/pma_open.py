@@ -52,7 +52,7 @@ def read_pma(file_path):
         return None
     
 
-def generate_images(file_path, output_path='output_png'):
+def generate_images(file_path, output_path='output_frames_png'):
     try:
         Frames_data = read_pma(file_path)
         for frame_idx, frame_data in enumerate(Frames_data):
@@ -63,16 +63,16 @@ def generate_images(file_path, output_path='output_png'):
         return None
     
 
-def generate_mp4(path, video_name, fps=100):
+def generate_mp4(images_path, video_name, fps=100):
     try: 
-        images = [img for img in os.listdir(path) if img.endswith(".png")]
+        images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
-        frame = cv2.imread(os.path.join(path, images[0]))
+        frame = cv2.imread(os.path.join(images_path, images[0]))
         height, width, layers = frame.shape
         video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         for image in images:
-            video.write(cv2.imread(os.path.join(path, image)))
+            video.write(cv2.imread(os.path.join(images_path, image)))
 
         video.release()
         cv2.destroyAllWindows()
@@ -83,6 +83,7 @@ def generate_mp4(path, video_name, fps=100):
     except Exception as e:
         print(f"Error generating video: {e}")
         return None
+
 
 
     
