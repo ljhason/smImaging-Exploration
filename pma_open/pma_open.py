@@ -4,10 +4,11 @@ import numpy as np
 import struct
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import cv2
 
-def read_pma_f0(file_path):
+def read_pma_f0(pma_file_path):
     try:
-        with open(file_path, "rb") as f:
+        with open(pma_file_path, "rb") as f:
             #Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
             #<:little-endian (least significant byte first), HH:two 16-bit integers
             X_pixels, Y_pixels = struct.unpack("<HH", f.read(4))
@@ -30,9 +31,9 @@ def read_pma_f0(file_path):
         print(f"Error reading .pma file: {e}")
         return None
 
-def read_pma(file_path):
+def read_pma(pma_file_path):
     try:
-        with open(file_path, "rb") as f:
+        with open(pma_file_path, "rb") as f:
             #Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
             #<:little-endian (least significant byte first), HH:two 16-bit integers
             X_pixels, Y_pixels = struct.unpack("<HH", f.read(4))
@@ -51,20 +52,22 @@ def read_pma(file_path):
         print(f"Error reading .pma file: {e}")
         return None
     
-
-def generate_images(file_path, output_path='output_frames_png'):
+def generate_images(pma_file_path):
     try:
-        Frames_data = read_pma(file_path)
+        output_name = pma_file_path.split(".")[-2].split("/")[-1]
+        os.makedirs(f"{output_name}_images")
+        Frames_data = read_pma(pma_file_path)
         for frame_idx, frame_data in enumerate(Frames_data):
-            plt.imsave(f"{output_path}/frame_{frame_idx}.png", frame_data, cmap='gray')
+            plt.imsave(f"{output_name}_images/{output_name}frame_{frame_idx}.png", frame_data, cmap='gray')
 
     except Exception as e:
-        print(f"Error generating images: {e}")
+        print(f"Error generating images or creating directory: {e}")
         return None
     
 
-def generate_mp4(images_path, video_name, fps=100):
-    try: 
+def generate_mp4(images_path, fps=100):
+    try:
+        video_name = f"{images_path.split('_')[-2]}.mp4"
         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
         frame = cv2.imread(os.path.join(images_path, images[0]))
@@ -83,17 +86,3 @@ def generate_mp4(images_path, video_name, fps=100):
     except Exception as e:
         print(f"Error generating video: {e}")
         return None
-
-def avg_frame(file_path):
-    try:
-        Frames_data = read_pma(file_path)
-        avg_frame_data = np.mean(Frames_data, axis=0)
-        return avg_frame_data
-
-    except Exception as e:
-        print(f"Error generating average frame: {e}")
-        return None
-
-
-
-    
