@@ -51,3 +51,37 @@ def read_pma(file_path):
         print(f"Error reading .pma file: {e}")
         return None
     
+
+def generate_images(file_path, output_path='output_png'):
+    try:
+        Frames_data = read_pma(file_path)
+        for frame_idx, frame_data in enumerate(Frames_data):
+            plt.imsave(f"{output_path}/frame_{frame_idx}.png", frame_data, cmap='gray')
+
+    except Exception as e:
+        print(f"Error generating images: {e}")
+        return None
+    
+
+def generate_video(path, video_name):
+    try: 
+        images = [img for img in os.listdir(path) if img.endswith(".png")]
+        images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
+        frame = cv2.imread(os.path.join(path, images[0]))
+        height, width, layers = frame.shape
+        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width, height))
+
+        for image in images:
+            video.write(cv2.imread(os.path.join(path, image)))
+
+        video.release()
+        cv2.destroyAllWindows()
+
+        print(f"Video sucessfully generated and saved as: {video_name}")
+        print(f"Images: {(images)}")
+    
+    except Exception as e:
+        print(f"Error generating video: {e}")
+        return None
+
+    
