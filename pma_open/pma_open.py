@@ -84,6 +84,16 @@ def generate_mp4(images_path, video_name, fps=100):
         print(f"Error generating video: {e}")
         return None
 
+def avg_frame(file_path):
+    try:
+        Frames_data = read_pma(file_path)
+        avg_frame_data = np.mean(Frames_data, axis=0)
+        return avg_frame_data
+
+    except Exception as e:
+        print(f"Error generating average frame: {e}")
+        return None
+
 
 
     
