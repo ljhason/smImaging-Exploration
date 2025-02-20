@@ -63,13 +63,13 @@ def generate_images(file_path, output_path='output_png'):
         return None
     
 
-def generate_video(path, video_name):
+def generate_mp4(path, video_name, fps=100):
     try: 
         images = [img for img in os.listdir(path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
         frame = cv2.imread(os.path.join(path, images[0]))
         height, width, layers = frame.shape
-        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width, height))
+        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         for image in images:
             video.write(cv2.imread(os.path.join(path, image)))
@@ -83,5 +83,6 @@ def generate_video(path, video_name):
     except Exception as e:
         print(f"Error generating video: {e}")
         return None
+
 
     
