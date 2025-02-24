@@ -55,10 +55,15 @@ def read_pma(pma_file_path):
 def generate_images(pma_file_path):
     try:
         output_name = pma_file_path.split(".")[-2].split("/")[-1]
-        os.makedirs(f"{output_name}_images")
+        if not os.path.exists(f"{output_name}_Files"):
+            os.makedirs(f"{output_name}_Files")
+        else:
+            print(f"Directory already exists: {output_name}_Files")
+            return None
+        
         Frames_data = read_pma(pma_file_path)
         for frame_idx, frame_data in enumerate(Frames_data):
-            plt.imsave(f"{output_name}_images/{output_name}frame_{frame_idx}.png", frame_data, cmap='gray')
+            plt.imsave(f"{output_name}_Files/{output_name}frame_{frame_idx}.png", frame_data, cmap='gray')
 
     except Exception as e:
         print(f"Error generating images or creating directory: {e}")
@@ -67,12 +72,21 @@ def generate_images(pma_file_path):
 
 def generate_mp4(images_path, fps=100):
     try:
-        video_name = f"{images_path.split('_')[-2]}.mp4"
+        pma_name = f"{images_path.split('_')[-2]}"
+        video_name = f"{pma_name}.mp4"
+        video_file= os.path.join(images_path, f"{pma_name}_Video")
+        
+        if not os.path.exists(video_file):
+            os.makedirs(video_file)
+        else:
+            print(f"Directory already exists: {video_file}")
+            return None
+            
         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
         frame = cv2.imread(os.path.join(images_path, images[0]))
         height, width, layers = frame.shape
-        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+        video = cv2.VideoWriter(os.path.join(video_file, video_name), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         for image in images:
             video.write(cv2.imread(os.path.join(images_path, image)))
