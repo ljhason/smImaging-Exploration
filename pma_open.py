@@ -5,6 +5,7 @@ import struct
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import cv2
+from skimage import io, feature, draw
 from PIL import Image
 
 def read_pma_f0(pma_file_path):
