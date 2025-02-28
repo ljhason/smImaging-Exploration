@@ -135,21 +135,3 @@ def avg_frame_png(pma_file_path):
         print(f"Error generating average frame: {e}")
         return None
     
-def find_peaks_scipy(image_path, peak_radius, scaler_percent):
-
-    image = io.imread(image_path, as_gray=True).astype(np.uint8)
-    sigma = peak_radius / 3.0
-    min_intensity = np.min(image)
-    max_intensity = np.max(image)
-    threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
-    
-    #Local max filter
-    local_max = maximum_filter(image, size=(3, 3)) == image  #3x3 neighborhood check
-    #Intensity threshold
-    peaks = (image >= threshold) & local_max
-    #Label peaks
-    labeled, num_features = label(peaks)
-    #Get peak coords
-    peak_coords = np.column_stack(np.where(labeled > 0))
-    
-    return peak_coords
