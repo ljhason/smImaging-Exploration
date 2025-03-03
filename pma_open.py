@@ -134,4 +134,58 @@ def avg_frame_png(pma_file_path):
     except Exception as e:
         print(f"Error generating average frame: {e}")
         return None
+
+#Same Good Peaks as in img_avg.ipynb file
+def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
+    peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
+    large_peaks = []
+    correct_size_peaks = []
+    height, width = io.imread(image_path).shape
+
+    for peak in peaks_coords_IDL:
+        y, x = peak
+        # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
+        if image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
+            large_peaks.append(peak)
+        else:
+            correct_size_peaks.append(peak)
+
+    correct_size_peaks = np.array(correct_size_peaks)
+    large_peaks = np.array(large_peaks)
     
+    return correct_size_peaks, large_peaks
+
+
+#SAME find_peaks_scipy_IDL function as in imv_avg.ipynb file
+def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
+    std = 4*sigma
+    # Load image (assumes grayscale uint8 image)
+    image = io.imread(image_path, as_gray=True).astype(np.uint8)
+    height, width = image.shape
+    image_1 = image.copy()
+    min_intensity = np.min(image_1)
+    max_intensity = np.max(image_1)
+    threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
+        
+    background = np.zeros((height, width), dtype=np.float32)
+
+    for i in range(8, height, block_size):
+        for j in range(8, width, block_size):
+            background[(i-8)//block_size, (j-8)//block_size] = np.min(image_1[i-8:i+8, j-8:j+8])
+        
+    # Subtract background
+    background = np.clip(background.astype(np.uint8) - 10, 0, 255)
+    image_1 = image - background
+        
+    image_2 = image_1.copy()
+    med = np.median(image_1)
+
+    # Apply threshold
+    image_2[image_2 < (med + 3*std)] = 0
+    correct_size_peaks = []
+    large_peaks = []
+    
+    # Detect peaks using peak_local_max
+    peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
+    
+    return peak_coords, image_2
