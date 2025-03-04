@@ -8,7 +8,8 @@ import cv2
 from scipy.ndimage import maximum_filter, label
 from skimage import io, feature, draw
 from PIL import Image
-
+from skimage.util.shape import view_as_blocks
+from skimage.feature import peak_local_max
 def read_pma_f0(pma_file_path):
     try:
         with open(pma_file_path, "rb") as f:
@@ -135,28 +136,6 @@ def avg_frame_png(pma_file_path):
         print(f"Error generating average frame: {e}")
         return None
 
-#Same Good Peaks as in img_avg.ipynb file
-def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
-    peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
-    large_peaks = []
-    correct_size_peaks = []
-    height, width = io.imread(image_path).shape
-
-    for peak in peaks_coords_IDL:
-        y, x = peak
-        # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
-        if image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
-            large_peaks.append(peak)
-        else:
-            correct_size_peaks.append(peak)
-
-    correct_size_peaks = np.array(correct_size_peaks)
-    large_peaks = np.array(large_peaks)
-    
-    return correct_size_peaks, large_peaks
-
-
-#SAME find_peaks_scipy_IDL function as in imv_avg.ipynb file
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
     std = 4*sigma
     # Load image (assumes grayscale uint8 image)
@@ -182,10 +161,31 @@ def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
 
     # Apply threshold
     image_2[image_2 < (med + 3*std)] = 0
-    correct_size_peaks = []
-    large_peaks = []
     
     # Detect peaks using peak_local_max
     peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
     
     return peak_coords, image_2
+
+#Same Good Peaks as in img_avg.ipynb file
+def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
+    peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
+    large_peaks = []
+    correct_size_peaks = []
+    height, width = io.imread(image_path).shape
+
+    for peak in peaks_coords_IDL:
+        y, x = peak
+        # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
+        if image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
+            large_peaks.append(peak)
+        else:
+            correct_size_peaks.append(peak)
+
+    correct_size_peaks = np.array(correct_size_peaks)
+    large_peaks = np.array(large_peaks)
+    
+    return correct_size_peaks, large_peaks
+
+def shift_peaks_CH(peaks, shift=[0, 256]):
+    return np.add(peaks, shift)
