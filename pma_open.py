@@ -209,3 +209,37 @@ def good_peak_finder_CH2(image_path, sigma=2, block_size=16, scaler_percent=10, 
 
 def shift_peaks_CH(peaks, shift=[0, 256]):
     return np.add(peaks, shift)
+
+def init_annot(ax, text="", xy=(0, 0), xytext=(5, 5), textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->")):
+    global annot
+    annot = ax.annotate(text, xy=xy, xytext=xytext, textcoords=textcoords, bbox=bbox, arrowprops=arrowprops)
+    annot.set_visible(False)
+    return annot
+
+# Function to update annotation text and position
+def update_annot(ind, scatter, peaks, label):
+    """ Updates the annotation position and text """
+    idx = ind["ind"][0]
+    y, x = peaks[idx]
+    annot.xy = (scatter.get_offsets()[idx][0], scatter.get_offsets()[idx][1])
+    annot.set_text(f"{label} Peak {idx}: (x, y) = ({x}, {y})")
+    annot.set_visible(True)
+
+
+# Event listener for hover functionality
+# Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
+def on_event(event, fig, scatter_data):
+    """ Checks if the mouse hovers over a point and updates annotation """
+    visible = False
+    for scatter, peaks, label in scatter_data:
+        cont, ind = scatter.contains(event)
+        if cont:
+            update_annot(ind, scatter, peaks, label)
+            visible = True
+            if event.name == "button_press_event":
+        
+                print(f"{label}_Peak{ind['ind'][0]} (x,y):({peaks[ind['ind'][0]][1]},{peaks[ind['ind'][0]][0]})")
+            break
+
+    annot.set_visible(visible)
+    fig.canvas.draw_idle()

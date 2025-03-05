@@ -44,61 +44,28 @@ good_peaks_2_new,_ = good_peak_finder_CH2(CH2_img_path, sigma=2, block_size=16, 
 good_peaks_1_CH2 = shift_peaks_CH(good_peaks_1)
 good_peaks_2_CH2 = shift_peaks_CH(good_peaks_2_new)
 
-#Changing any parameters to see if the blue circle more closely resemble the red circles. 
-fig, ax = plt.subplots(figsize=(4, 8))
 
-ax.set_title("CH2 Image Peak Comparision")
-# ax.imshow(image_CH2, cmap="gray", alpha=0.9)
+fig = plt.figure(figsize=(8, 8))
+ax = fig.subplots()
+plt.axhline(y= 170, color='w', linestyle='--')  
+plt.axhline(y= 340, color='w', linestyle='--')
+plt.suptitle("CH1 and CH2 Identified Peaks", fontsize=16)
+plt.title("Hover over points to see peak index and coordinates \n Click on peaks to print peak info in terminal \n Indentify and select corresponding peaks in CH1 and CH2 from each third of the image", fontsize=10)
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+ax.imshow(image, cmap="gray", alpha=0.7)
 scat1 = ax.scatter(good_peaks_1[:, 1], good_peaks_1[:, 0], s=50, facecolors='none', edgecolors='r', label='Peaks from CH1')
-scat2 = ax.scatter(good_peaks_2_new[:, 1], good_peaks_2_new[:, 0], s=50, facecolors='none', edgecolors='b', label='Peaks from CH2')
-ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
+scat2 = ax.scatter(good_peaks_2_CH2[:, 1], good_peaks_2_CH2[:, 0], s=50, facecolors='none', edgecolors='b', label='Peaks from CH2')
+ax.legend(loc='upper right', bbox_to_anchor=(1.15, 1.1))
 
-# Create annotation text box
-annot = ax.annotate("", xy=(0, 0), xytext=(15, 15), textcoords="offset points",
-                    bbox=dict(boxstyle="round", fc="w"),
-                    arrowprops=dict(arrowstyle="->"))
-annot.set_visible(False)
+annot = init_annot(ax=ax)
 
-# Function to update annotation text and position
-def update_annot(ind, scatter, peaks, label):
-    """ Updates the annotation position and text """
-    idx = ind["ind"][0]
-    x, y = peaks[idx]
-    annot.xy = (scatter.get_offsets()[idx][0], scatter.get_offsets()[idx][1])
-    annot.set_text(f"{label} Peak {idx}: ({x}, {y})")
-    annot.set_visible(True)
-
-# Event listener for hover functionality
-def on_hover(event):
-    """ Checks if the mouse hovers over a point and updates annotation """
-    visible = False
-    for scatter, peaks, label in [(scat1, good_peaks_1, "CH1"), (scat2, good_peaks_2_CH2, "CH2")]:
-        cont, ind = scatter.contains(event)
-        if cont:
-            update_annot(ind, scatter, peaks, label)
-            visible = True
-            break
-    annot.set_visible(visible)
-    fig.canvas.draw_idle()
-
-def on_click(event):
-    visible = False
-    for scatter, peaks, label in [(scat1, good_peaks_1, "CH1"), (scat2, good_peaks_2_CH2, "CH2")]:
-        cont, ind = scatter.contains(event)
-        if cont:
-            update_annot(ind, scatter, peaks, label)
-            visible = True
-            break
-    annot.set_visible(visible)
-    fig.canvas.draw_idle()
-    #print Chanel, peak index and peak coordinates
-    print(f"{label} Peak {ind['ind'][0]}: ({peaks[ind['ind'][0]][0]}, {peaks[ind['ind'][0]][1]})")
-
-
+scatter_data = [(scat1, good_peaks_1, "CH1"), (scat2, good_peaks_2_CH2, "CH2")]
 # Connect hover event to the figure
-fig.canvas.mpl_connect("motion_notify_event", on_hover)
-fig.canvas.mpl_connect("button_press_event", on_click)
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_event(event, fig, scatter_data))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_event(event, fig, scatter_data))
 
 plt.show()
+
 
 
