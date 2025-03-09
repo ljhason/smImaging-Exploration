@@ -207,10 +207,12 @@ def good_peak_finder_CH2(image_path, sigma=2, block_size=16, scaler_percent=10, 
     
     return correct_size_peaks, large_peaks
 
-def shift_peaks_CH(peaks, shift=[0, 256]):
+def shift_peaks(peaks, shift=[0, 256]):
     return np.add(peaks, shift)
 
-def init_annot(ax, text="", xy=(0, 0), xytext=(5, 5), textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->")):
+# make the arrow point from below the point
+
+def init_annot(ax, text="", xy=(0, 0), xytext=(0, 10),textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->")):
     global annot
     annot = ax.annotate(text, xy=xy, xytext=xytext, textcoords=textcoords, bbox=bbox, arrowprops=arrowprops)
     annot.set_visible(False)
@@ -243,3 +245,29 @@ def on_event(event, fig, scatter_data):
 
     annot.set_visible(visible)
     fig.canvas.draw_idle()
+
+
+def find_linear_pairs(peaks_1, peaks_2):
+    # peaks_2 coordinates goes from [0, 512] to [256,512]
+    gp1_list = [tuple(peak) for peak in peaks_1]
+    gp2_list = [tuple(peak) for peak in peaks_2]
+    gp2_set = set(gp2_list)
+    linear_pair_count = 0
+    linear_pair_arr_CH1 = []
+    linear_pair_arr_CH2 = []
+
+    for coord in gp1_list:
+        if coord in gp2_set:
+            linear_pair_count += 1
+            linear_pair_arr_CH1.append(coord)
+            linear_pair_arr_CH2.append(c)
+        else:
+            for c in gp2_set:
+                if (abs(coord[0] - c[0])) <=1 and (255 <= abs(coord[1] - c[1]) <= 257):
+                    linear_pair_count += 1
+                    linear_pair_arr_CH1.append(coord)
+                    linear_pair_arr_CH2.append(c)
+                    break
+    linear_pair_arr_CH1 = np.array(linear_pair_arr_CH1)
+    linear_pair_arr_CH2 = np.array(linear_pair_arr_CH2)
+    return linear_pair_count, linear_pair_arr_CH1, linear_pair_arr_CH2

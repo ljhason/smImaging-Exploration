@@ -41,8 +41,8 @@ good_peaks_1,_ = good_peak_finder_CH1(CH1_img_path)
 good_peaks_2_new,_ = good_peak_finder_CH2(CH2_img_path, sigma=2, block_size=16, scaler_percent=10, boarder=10, max_rad=3)
 
 # Move good_peaks_1 to CH2 to display full image
-good_peaks_1_CH2 = shift_peaks_CH(good_peaks_1)
-good_peaks_2_CH2 = shift_peaks_CH(good_peaks_2_new)
+good_peaks_1_CH2 = shift_peaks(good_peaks_1)
+good_peaks_2_CH2 = shift_peaks(good_peaks_2_new)
 
 
 fig = plt.figure(figsize=(8, 8))
