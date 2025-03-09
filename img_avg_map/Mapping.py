@@ -56,7 +56,7 @@ ax.set_ylabel("Y")
 ax.imshow(image, cmap="gray", alpha=0.7)
 scat1 = ax.scatter(good_peaks_1[:, 1], good_peaks_1[:, 0], s=50, facecolors='none', edgecolors='r', label='Peaks from CH1')
 scat2 = ax.scatter(good_peaks_2_CH2[:, 1], good_peaks_2_CH2[:, 0], s=50, facecolors='none', edgecolors='b', label='Peaks from CH2')
-ax.legend(loc='upper right', bbox_to_anchor=(1.15, 1.1))
+ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.15))
 
 annot = init_annot(ax=ax)
 

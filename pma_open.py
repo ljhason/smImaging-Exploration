@@ -222,7 +222,7 @@ def update_annot(ind, scatter, peaks, label):
     idx = ind["ind"][0]
     y, x = peaks[idx]
     annot.xy = (scatter.get_offsets()[idx][0], scatter.get_offsets()[idx][1])
-    annot.set_text(f"{label} Peak {idx}: (x, y) = ({x}, {y})")
+    annot.set_text(f"{label} Peak {idx}: (y, x) = ({y}, {x})")
     annot.set_visible(True)
 
 
@@ -238,7 +238,7 @@ def on_event(event, fig, scatter_data):
             visible = True
             if event.name == "button_press_event":
         
-                print(f"{label}_Peak{ind['ind'][0]} (x,y):({peaks[ind['ind'][0]][1]},{peaks[ind['ind'][0]][0]})")
+                print(f"{label}_Peak{ind['ind'][0]} (y, x):({peaks[ind['ind'][0]][0]},{peaks[ind['ind'][0]][1]})")
             break
 
     annot.set_visible(visible)
