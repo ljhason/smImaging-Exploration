@@ -246,7 +246,6 @@ def on_event(event, fig, scatter_data):
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
-
 def find_linear_pairs(peaks_1, peaks_2, tolerance=1):
     # peaks_2 coordinates goes from [0, 512] to [256,512]
     gp1_list = [tuple(peak) for peak in peaks_1]
@@ -257,13 +256,8 @@ def find_linear_pairs(peaks_1, peaks_2, tolerance=1):
     linear_pair_arr_CH2 = []
 
     for coord in gp1_list:
-        if coord in gp2_set:
-            linear_pair_count += 1
-            linear_pair_arr_CH1.append(coord)
-            linear_pair_arr_CH2.append(coord)
-        else:
             for c in gp2_set:
-                if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance):
+                if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in linear_pair_arr_CH2:
                     linear_pair_count += 1
                     linear_pair_arr_CH1.append(coord)
                     linear_pair_arr_CH2.append(c)
