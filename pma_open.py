@@ -265,3 +265,43 @@ def find_linear_pairs(peaks_1, peaks_2, tolerance=1):
     linear_pair_arr_CH1 = np.array(linear_pair_arr_CH1)
     linear_pair_arr_CH2 = np.array(linear_pair_arr_CH2)
     return linear_pair_count, linear_pair_arr_CH1, linear_pair_arr_CH2
+
+
+def find_polyfit_params(peaks_1, peaks_2, degree=2):
+    y1, x1 = peaks_1[:, 0], peaks_1[:, 1] 
+    y2, x2 = peaks_2[:, 0], peaks_2[:, 1] 
+
+    # Fit polynomials for x and y separately
+    params_x = np.polyfit(x1, x2, degree)  # Fit x transformation
+    params_y = np.polyfit(y1, y2, degree)  # Fit y transformation
+
+    return params_x, params_y  # Returns polynomial coefficients
+
+def apply_polyfit_params(CH1_peaks, params_x, params_y):
+    y1, x1 = CH1_peaks[:, 0], CH1_peaks[:, 1]
+    x_mapped = np.polyval(params_x, x1)  # Apply X transformation
+    y_mapped = np.polyval(params_y, y1)  # Apply Y transformation
+    return np.column_stack((y_mapped, x_mapped))  # Return transformed points
+
+# Some 
+def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
+    # we are comparing mapped peaks to CH2 peaks
+    map_list = [tuple(peak) for peak in mapped_peaks]
+    gp1_list = [tuple(peak) for peak in peaks_1]
+    gp1_set = set(gp1_list)
+
+    poly_pair_count = 0
+    poly_pair_arr_CH1 = []
+    poly_pair_arr_CH2 = []
+
+    for coord in map_list:
+            for c in gp1_set:
+                if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in poly_pair_arr_CH1:
+                    poly_pair_count += 1
+                    poly_pair_arr_CH1.append(c)
+                    poly_pair_arr_CH2.append(coord)
+                    break
+                
+    poly_pair_arr_CH1 = np.array(poly_pair_arr_CH1)
+    poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
+    return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
