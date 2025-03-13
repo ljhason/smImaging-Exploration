@@ -28,10 +28,10 @@ def read_pma_f0(pma_file_path):
 
             #Read the binary image data
             frame_data0 = f.read(X_pixels * Y_pixels)
-            #Convert the frame data into a 2D numpy array of size (Y_pixels, X_pixels)
+            #Convert the frame data into a 3D numpy array 512,512, 3 (RGB)
             image_data = np.frombuffer(frame_data0, dtype=np.uint8).reshape((Y_pixels, X_pixels))
-
-            return image_data
+            image_data_rgb = np.stack((image_data,) * 3, axis=-1)
+            return image_data_rgb
 
     except Exception as e:
         print(f"Error reading .pma file: {e}")
@@ -109,8 +109,10 @@ def generate_mp4(images_path, fps=100):
     
 def avg_frame_arr(pma_file_path):
     try:
+
         Frames_data = read_pma(pma_file_path)
         avg_frame_data = np.mean(Frames_data, axis=0).astype(np.uint8)
+        avg_frame_data = np.repeat(avg_frame_data[..., np.newaxis], 3, -1)
         print(f"Sucessfully generated average frame")
         return avg_frame_data
 
@@ -119,7 +121,6 @@ def avg_frame_arr(pma_file_path):
         return None
 
 
-#Note to self: This function is NOT returning creating a PNG file!! 
 def avg_frame_png(pma_file_path):
     try:
         Frames_data = read_pma(pma_file_path)
@@ -300,10 +301,10 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
-def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+def draw_circle(radius, y_centre, x_centre, background_dim, dimension, colour=[255, 255, 255]):
 
     diameter = 2 * radius + 1
-    circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
+    circle_array = np.zeros((background_dim, background_dim, dimension), dtype=np.uint8)
     
 
     # Midpoint circle algorithm
@@ -329,6 +330,20 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
             p = p + 2 * y - 2 * x + 1
     
     return circle_array
+
+# def plot_circles(image, radius, y_centre, x_centre, background_dim, dimension=3, colour=[255, 255, 255]):
+#     circle_array = draw_circle(radius, y_centre, x_centre, background_dim, dimension, colour)
+#     mask = (all_arr == [255, 255, 255])
+#     image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+
+
+#     # Set the pixels in the mask to be yellow
+#     image_3d[mask] = [255]
+
+#     # Display the modified image
+#     plt.imshow(image_3d)
+#     plt.show()
+    
 
 # Event listener for hover functionality
 # Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
