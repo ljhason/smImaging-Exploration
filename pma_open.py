@@ -300,20 +300,49 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
+def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+
+    diameter = 2 * radius + 1
+    circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
+    
+
+    # Midpoint circle algorithm
+    x = radius
+    y = 0
+    p = 1 - radius
+    
+    while x >= y:
+        circle_array[x_centre + x, y_centre + y] = colour
+        circle_array[x_centre - x, y_centre + y] = colour
+        circle_array[x_centre + x, y_centre - y] = colour
+        circle_array[x_centre - x, y_centre - y] = colour
+        circle_array[x_centre + y, y_centre + x] = colour
+        circle_array[x_centre - y, y_centre + x] = colour
+        circle_array[x_centre + y, y_centre - x] = colour
+        circle_array[x_centre - y, y_centre - x] = colour
+        
+        y += 1
+        if p <= 0:
+            p = p + 2 * y + 1
+        else:
+            x -= 1
+            p = p + 2 * y - 2 * x + 1
+    
+    return circle_array
 
 # Event listener for hover functionality
 # Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
-def display_peak_trigger(event, fig, scatter_data):
-    """ Checks if the mouse hovers over a point and updates annotation """
-    visible = False
-    for scatter, peaks, label in scatter_data:
-        cont, ind = scatter.contains(event)
-        if cont:
-            update_annot(ind, scatter, peaks, label)
-            visible = True
-            if event.name == "button_press_event":
-                #### Add code here to display peak and peak counterpart
-            break
+# def display_peak_trigger(event, fig, scatter_data):
+#     """ Checks if the mouse hovers over a point and updates annotation """
+#     visible = False
+#     for scatter, peaks, label in scatter_data:
+#         cont, ind = scatter.contains(event)
+#         if cont:
+#             update_annot(ind, scatter, peaks, label)
+#             visible = True
+#             if event.name == "button_press_event":
+#                 #### Add code here to display peak and peak counterpart
+#             break
 
-    annot.set_visible(visible)
-    fig.canvas.draw_idle()
+#     annot.set_visible(visible)
+#     fig.canvas.draw_idle()
