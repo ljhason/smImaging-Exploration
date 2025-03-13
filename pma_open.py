@@ -10,6 +10,7 @@ from skimage import io, feature, draw
 from PIL import Image
 from skimage.util.shape import view_as_blocks
 from skimage.feature import peak_local_max
+from matplotlib.widgets import Cursor, Button
 
 def read_pma_f0(pma_file_path):
     try:
@@ -169,26 +170,7 @@ def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
     return peak_coords, image_2
 
 #Same Good Peaks as in img_avg.ipynb file
-def good_peak_finder_CH1(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
-    peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
-    large_peaks = []
-    correct_size_peaks = []
-    height, width = io.imread(image_path).shape
-
-    for peak in peaks_coords_IDL:
-        y, x = peak
-        # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
-        if image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
-            large_peaks.append(peak)
-        else:
-            correct_size_peaks.append(peak)
-
-    correct_size_peaks = np.array(correct_size_peaks)
-    large_peaks = np.array(large_peaks)
-    
-    return correct_size_peaks, large_peaks
-
-def good_peak_finder_CH2(image_path, sigma=2, block_size=16, scaler_percent=10, boarder=10, max_rad=3):
+def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
     large_peaks = []
     correct_size_peaks = []
@@ -230,7 +212,7 @@ def update_annot(ind, scatter, peaks, label):
 
 # Event listener for hover functionality
 # Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
-def on_event(event, fig, scatter_data):
+def print_coords_trigger(event, fig, scatter_data):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     for scatter, peaks, label in scatter_data:
@@ -317,3 +299,50 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH1 = np.array(poly_pair_arr_CH1)
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
+
+def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+
+    diameter = 2 * radius + 1
+    circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
+    
+
+    # Midpoint circle algorithm
+    x = radius
+    y = 0
+    p = 1 - radius
+    
+    while x >= y:
+        circle_array[x_centre + x, y_centre + y] = colour
+        circle_array[x_centre - x, y_centre + y] = colour
+        circle_array[x_centre + x, y_centre - y] = colour
+        circle_array[x_centre - x, y_centre - y] = colour
+        circle_array[x_centre + y, y_centre + x] = colour
+        circle_array[x_centre - y, y_centre + x] = colour
+        circle_array[x_centre + y, y_centre - x] = colour
+        circle_array[x_centre - y, y_centre - x] = colour
+        
+        y += 1
+        if p <= 0:
+            p = p + 2 * y + 1
+        else:
+            x -= 1
+            p = p + 2 * y - 2 * x + 1
+    
+    return circle_array
+
+# Event listener for hover functionality
+# Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
+# def display_peak_trigger(event, fig, scatter_data):
+#     """ Checks if the mouse hovers over a point and updates annotation """
+#     visible = False
+#     for scatter, peaks, label in scatter_data:
+#         cont, ind = scatter.contains(event)
+#         if cont:
+#             update_annot(ind, scatter, peaks, label)
+#             visible = True
+#             if event.name == "button_press_event":
+#                 #### Add code here to display peak and peak counterpart
+#             break
+
+#     annot.set_visible(visible)
+#     fig.canvas.draw_idle()

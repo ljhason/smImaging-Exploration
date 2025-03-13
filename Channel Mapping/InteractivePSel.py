@@ -7,38 +7,17 @@ parent_directory = current_file_path.parent.parent
 sys.path.append(str(parent_directory))
 from pma_open import *
 
-
-from matplotlib.widgets import Cursor, Button
-
 #My image
 file_path = 'Dropbox Files/hel1.pma'
-image_path = "img_avg_map/hel1_Avg_Frame/hel1_Avg_Frame.png"
+image_path = "Channel Mapping/hel1_Avg_Frame/hel1_Avg_Frame.png"
 image = io.imread(image_path, as_gray=True)
 
-#Image on dropbox
-hel1_ave_path = 'Dropbox Files/hel1_ave_LF_Circ.tif'
-hel1_ave_image = io.imread(hel1_ave_path)
-
-#Testing avg_frame_arr function
-avg_frame_data = avg_frame_arr(file_path)
-
-#Chanel arrays
-avg_frame_data_CH1 = avg_frame_data[:,:256]
-avg_frame_data_CH2 = avg_frame_data[:,256:]
-
 #Chanel image paths
-CH1_img_path = "img_avg_map/hel1_Avg_Frame/hel1_Avg_Frame_CH1.png"
-CH2_img_path = "img_avg_map/hel1_Avg_Frame/hel1_Avg_Frame_CH2.png"
+CH1_img_path = "Channel Mapping/hel1_Avg_Frame/hel1_Avg_Frame_CH1.png"
+CH2_img_path = "Channel Mapping/hel1_Avg_Frame/hel1_Avg_Frame_CH2.png"
 
-#Chanel images
-image_CH1 = io.imread(CH1_img_path, as_gray=True)
-image_CH2 = io.imread(CH2_img_path, as_gray=True)
-
-peaks_coords_IDL_CH1 = find_peaks_scipy_IDL(CH1_img_path)[0]
-peaks_coords_IDL_CH2_new = find_peaks_scipy_IDL(CH2_img_path, sigma=2, block_size=16, scaler_percent=10)[0]
-
-good_peaks_1,_ = good_peak_finder_CH1(CH1_img_path)
-good_peaks_2_new,_ = good_peak_finder_CH2(CH2_img_path, sigma=2, block_size=16, scaler_percent=10, boarder=10, max_rad=3)
+good_peaks_1,_ = good_peak_finder(CH1_img_path)
+good_peaks_2_new,_ = good_peak_finder(CH2_img_path, sigma=2, block_size=16, scaler_percent=10, boarder=10, max_rad=3)
 
 # Move good_peaks_1 to CH2 to display full image
 good_peaks_1_CH2 = shift_peaks(good_peaks_1)
@@ -70,8 +49,8 @@ annot = init_annot(ax=ax)
 
 scatter_data = [(scat1, good_peaks_1, "CH1"), (scat2, good_peaks_2_CH2, "CH2")]
 # Connect hover event to the figure
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_event(event, fig, scatter_data))
-fig.canvas.mpl_connect("button_press_event", lambda event: on_event(event, fig, scatter_data))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: print_coords_trigger(event, fig, scatter_data))
+fig.canvas.mpl_connect("button_press_event", lambda event: print_coords_trigger(event, fig, scatter_data))
 
 plt.show()
 
