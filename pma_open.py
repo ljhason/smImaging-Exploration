@@ -38,7 +38,6 @@ def read_pma_f0(pma_file_path):
         print(f"Error reading .pma file: {e}")
         return None
 
-
 def read_pma(pma_file_path):
     try:
         with open(pma_file_path, "rb") as f:
@@ -144,9 +143,6 @@ def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
     std = 4*sigma
     # Load image (assumes grayscale uint8 image)
     image = io.imread(image_path, as_gray=True).astype(np.uint8)
-    if image.ndim == 3 and image.shape[2]==3:
-        image = image[..., 0]
-
     height, width = image.shape
     image_1 = image.copy()
     min_intensity = np.min(image_1)
@@ -179,11 +175,7 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
     large_peaks = []
     correct_size_peaks = []
-    image = io.imread(image_path).astype(np.uint8)
-    if image.ndim == 3 and image.shape[2]==3:
-        image = image[..., 0]
-
-    height, width = image.shape
+    height, width = io.imread(image_path).shape
 
     for peak in peaks_coords_IDL:
         y, x = peak
@@ -315,7 +307,7 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
 
 
     diameter = 2 * radius + 1
-    circle_array = np.zeros((background_dim, background_dim, dimension), dtype=np.uint8)
+    circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
     
 
     # Midpoint circle algorithm
@@ -342,7 +334,7 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
     
     return circle_array
 
-def plot_cicle(image, radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
     circle_array = draw_circle(4, y_centre, x_centre, image.shape[0])
     mask = (circle_array == [255, 255, 0]).all(axis=-1)
     try:
