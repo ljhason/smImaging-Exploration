@@ -7,6 +7,7 @@ import matplotlib.image as mpimg
 import cv2
 from scipy.ndimage import maximum_filter, label
 from skimage import io, feature, draw
+from skimage import color
 from PIL import Image
 from skimage.util.shape import view_as_blocks
 from skimage.feature import peak_local_max
@@ -28,7 +29,7 @@ def read_pma_f0(pma_file_path):
 
             #Read the binary image data
             frame_data0 = f.read(X_pixels * Y_pixels)
-            #Convert the frame data into a 2D numpy array of size (Y_pixels, X_pixels)
+
             image_data = np.frombuffer(frame_data0, dtype=np.uint8).reshape((Y_pixels, X_pixels))
 
             return image_data
@@ -37,22 +38,20 @@ def read_pma_f0(pma_file_path):
         print(f"Error reading .pma file: {e}")
         return None
 
+
 def read_pma(pma_file_path):
     try:
         with open(pma_file_path, "rb") as f:
-            #Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
-            #<:little-endian (least significant byte first), HH:two 16-bit integers
+            # Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
             X_pixels, Y_pixels = struct.unpack("<HH", f.read(4))
             print(f"Image Size: {X_pixels} x {Y_pixels}")
             
-            #Calc number of frames
-            f.seek(0, 2) #sets pointer to end of file .seek(offset, from_what)
-            filesize = f.tell() #returns current (end) position of pointer
-            Nframes = (filesize - 4) // (X_pixels * Y_pixels)  #Assuming 4-byte header
-            f.seek(0, 4) #Reset file pointer to immediately after 4 byte header
-
-            #Return a list of 2D numpy arrays, each representing a frame
-            return [np.frombuffer(f.read(X_pixels * Y_pixels), dtype=np.uint8).reshape((Y_pixels, X_pixels)) for frame_idx in range(Nframes)]
+            # Calculate number of frames
+            f.seek(0, 2)  # sets pointer to end of file
+            filesize = f.tell()  # returns current (end) position of pointer
+            Nframes = (filesize - 4) // (X_pixels * Y_pixels)  # Assuming 4-byte header
+            f.seek(4)  # Reset file pointer to immediately after 4 byte header
+            return [np.frombuffer(f.read(X_pixels*Y_pixels), dtype=np.uint8).reshape((Y_pixels, X_pixels)) for frame_idx in range(Nframes)]
 
     except Exception as e:
         print(f"Error reading .pma file: {e}")
@@ -109,6 +108,7 @@ def generate_mp4(images_path, fps=100):
     
 def avg_frame_arr(pma_file_path):
     try:
+
         Frames_data = read_pma(pma_file_path)
         avg_frame_data = np.mean(Frames_data, axis=0).astype(np.uint8)
         print(f"Sucessfully generated average frame")
@@ -119,7 +119,6 @@ def avg_frame_arr(pma_file_path):
         return None
 
 
-#Note to self: This function is NOT returning creating a PNG file!! 
 def avg_frame_png(pma_file_path):
     try:
         Frames_data = read_pma(pma_file_path)
@@ -138,10 +137,16 @@ def avg_frame_png(pma_file_path):
         print(f"Error generating average frame: {e}")
         return None
 
+def dim_to_3(image):
+    return np.stack((image,) * 3, axis=-1)
+
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
     std = 4*sigma
     # Load image (assumes grayscale uint8 image)
     image = io.imread(image_path, as_gray=True).astype(np.uint8)
+    if image.ndim == 3 and image.shape[2]==3:
+        image = image[..., 0]
+
     height, width = image.shape
     image_1 = image.copy()
     min_intensity = np.min(image_1)
@@ -174,7 +179,11 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
     large_peaks = []
     correct_size_peaks = []
-    height, width = io.imread(image_path).shape
+    image = io.imread(image_path).astype(np.uint8)
+    if image.ndim == 3 and image.shape[2]==3:
+        image = image[..., 0]
+
+    height, width = image.shape
 
     for peak in peaks_coords_IDL:
         y, x = peak
@@ -300,11 +309,13 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
+
 # Midpoint circle algorithm 
 def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
 
+
     diameter = 2 * radius + 1
-    circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
+    circle_array = np.zeros((background_dim, background_dim, dimension), dtype=np.uint8)
     
 
     # Midpoint circle algorithm
