@@ -300,6 +300,7 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
+# Midpoint circle algorithm 
 def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
 
     diameter = 2 * radius + 1
@@ -330,6 +331,25 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
     
     return circle_array
 
+def plot_cicle(image, radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+    circle_array = draw_circle(4, y_centre, x_centre, image.shape[0])
+    mask = (circle_array == [255, 255, 0]).all(axis=-1)
+    try:
+        if image.ndim == 2:
+            image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+        elif image.ndim==3 and image.shape[2]==3:
+            image_3d = image
+    except Exception as e:
+        print(f"Error plotting circle: {e}")
+        return None
+    
+    # Set the pixels in the mask to be yellow
+    image_3d[mask] = [255, 255, 0]
+    # Display the modified image
+
+    plt.imshow(image_3d)
+    plt.show()
+    
 # Event listener for hover functionality
 # Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
 # def display_peak_trigger(event, fig, scatter_data):
