@@ -7,6 +7,7 @@ import matplotlib.image as mpimg
 import cv2
 from scipy.ndimage import maximum_filter, label
 from skimage import io, feature, draw
+from skimage import color
 from PIL import Image
 from skimage.util.shape import view_as_blocks
 from skimage.feature import peak_local_max
@@ -152,31 +153,78 @@ def avg_frame_png(pma_file_path):
 def dim_to_3(image):
     return np.stack((image,) * 3, axis=-1)
 
+# def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
+#     std = 4*sigma
+#     # Load image (assumes grayscale uint8 image)
+#     image = io.imread(image_path, as_gray=True).astype(np.uint8)
+#     if image.ndim == 3 and image.shape[2]==3:
+#         image = image[..., 0]
+
+#     height, width = image.shape
+#     image_1 = image.copy()
+#     min_intensity = np.min(image_1)
+#     max_intensity = np.max(image_1)
+#     threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
+        
+#     background = np.zeros((height, width), dtype=np.float32)
+
+#     for i in range(8, height, block_size):
+#         for j in range(8, width, block_size):
+#             background[(i-8)//block_size, (j-8)//block_size] = np.min(image_1[i-8:i+8, j-8:j+8])
+        
+#     # Subtract background
+#     background = np.clip(background.astype(np.uint8) - 10, 0, 255)
+#     image_1 = image - background
+        
+#     image_2 = image_1.copy()
+#     med = np.median(image_1)
+
+#     # Apply threshold
+#     image_2[image_2 < (med + 3*std)] = 0
+    
+#     # Detect peaks using peak_local_max
+#     peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
+    
+#     return peak_coords, image_2
+
+
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
-    std = 4*sigma
-    # Load image (assumes grayscale uint8 image)
-    image = io.imread(image_path, as_gray=True).astype(np.uint8)
+    std = 4 * sigma
+    
+    # Load image (handles RGB and grayscale)
+    image = io.imread(image_path)
+    
+    if image.ndim == 3 and image.shape[2] == 3:
+        image = color.rgb2gray(image)  # Convert RGB to grayscale if needed
+    
+    image = (image * 255).astype(np.uint8)  # Convert to uint8
+    
     height, width = image.shape
     image_1 = image.copy()
+    
     min_intensity = np.min(image_1)
     max_intensity = np.max(image_1)
     threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
-        
-    background = np.zeros((height, width), dtype=np.float32)
-
+    
+    # Background estimation
+    background = np.zeros((height // block_size, width // block_size), dtype=np.float32)
+    
     for i in range(8, height, block_size):
         for j in range(8, width, block_size):
             background[(i-8)//block_size, (j-8)//block_size] = np.min(image_1[i-8:i+8, j-8:j+8])
-        
+    
+    # Interpolate background to match image size
+    background = np.kron(background, np.ones((block_size, block_size)))[:height, :width]
+    
     # Subtract background
     background = np.clip(background.astype(np.uint8) - 10, 0, 255)
-    image_1 = image - background
-        
+    image_1 = np.clip(image - background, 0, 255)
+    
     image_2 = image_1.copy()
     med = np.median(image_1)
-
+    
     # Apply threshold
-    image_2[image_2 < (med + 3*std)] = 0
+    image_2[image_2 < (med + 3 * std)] = 0
     
     # Detect peaks using peak_local_max
     peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
@@ -188,7 +236,11 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
     large_peaks = []
     correct_size_peaks = []
-    height, width = io.imread(image_path).shape
+    image = io.imread(image_path).astype(np.uint8)
+    if image.ndim == 3 and image.shape[2]==3:
+        image = image[..., 0]
+
+    height, width = image.shape
 
     for peak in peaks_coords_IDL:
         y, x = peak
