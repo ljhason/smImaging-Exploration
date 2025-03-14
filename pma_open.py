@@ -31,7 +31,6 @@ def read_pma_f0(pma_file_path):
             frame_data0 = f.read(X_pixels * Y_pixels)
 
             image_data = np.frombuffer(frame_data0, dtype=np.uint8).reshape((Y_pixels, X_pixels))
-            image_data_rgb = np.stack((image_data,) * 3, axis=-1)
 
             return image_data
 
@@ -52,19 +51,7 @@ def read_pma(pma_file_path):
             filesize = f.tell()  # returns current (end) position of pointer
             Nframes = (filesize - 4) // (X_pixels * Y_pixels)  # Assuming 4-byte header
             f.seek(4)  # Reset file pointer to immediately after 4 byte header
-
-            # Create a list of 3D numpy arrays (512, 512, 3) (RGB), each representing a frame
-            Frames_arr = []
-            for frame_idx in range(Nframes):
-                # Read the binary image data
-                frame_data = f.read(X_pixels * Y_pixels)
-                # Convert to NumPy array and reshape to (Y_pixels, X_pixels)
-                image_data = np.frombuffer(frame_data, dtype=np.uint8).reshape((Y_pixels, X_pixels))
-                # Convert grayscale image to RGB by stacking the grayscale data along the third axis
-                image_data_rgb = np.stack((image_data,) * 3, axis=-1)
-                Frames_arr.append(image_data_rgb)
-            
-            return Frames_arr
+            return [np.frombuffer(f.read(X_pixels*Y_pixels), dtype=np.uint8).reshape((Y_pixels, X_pixels)) for frame_idx in range(Nframes)]
 
     except Exception as e:
         print(f"Error reading .pma file: {e}")
@@ -153,78 +140,34 @@ def avg_frame_png(pma_file_path):
 def dim_to_3(image):
     return np.stack((image,) * 3, axis=-1)
 
-# def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
-#     std = 4*sigma
-#     # Load image (assumes grayscale uint8 image)
-#     image = io.imread(image_path, as_gray=True).astype(np.uint8)
-#     if image.ndim == 3 and image.shape[2]==3:
-#         image = image[..., 0]
-
-#     height, width = image.shape
-#     image_1 = image.copy()
-#     min_intensity = np.min(image_1)
-#     max_intensity = np.max(image_1)
-#     threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
-        
-#     background = np.zeros((height, width), dtype=np.float32)
-
-#     for i in range(8, height, block_size):
-#         for j in range(8, width, block_size):
-#             background[(i-8)//block_size, (j-8)//block_size] = np.min(image_1[i-8:i+8, j-8:j+8])
-        
-#     # Subtract background
-#     background = np.clip(background.astype(np.uint8) - 10, 0, 255)
-#     image_1 = image - background
-        
-#     image_2 = image_1.copy()
-#     med = np.median(image_1)
-
-#     # Apply threshold
-#     image_2[image_2 < (med + 3*std)] = 0
-    
-#     # Detect peaks using peak_local_max
-#     peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
-    
-#     return peak_coords, image_2
-
-
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
-    std = 4 * sigma
-    
-    # Load image (handles RGB and grayscale)
-    image = io.imread(image_path)
-    
-    if image.ndim == 3 and image.shape[2] == 3:
-        image = color.rgb2gray(image)  # Convert RGB to grayscale if needed
-    
-    image = (image * 255).astype(np.uint8)  # Convert to uint8
-    
+    std = 4*sigma
+    # Load image (assumes grayscale uint8 image)
+    image = io.imread(image_path, as_gray=True).astype(np.uint8)
+    if image.ndim == 3 and image.shape[2]==3:
+        image = image[..., 0]
+
     height, width = image.shape
     image_1 = image.copy()
-    
     min_intensity = np.min(image_1)
     max_intensity = np.max(image_1)
     threshold = min_intensity + (scaler_percent / 100.0) * (max_intensity - min_intensity)
-    
-    # Background estimation
-    background = np.zeros((height // block_size, width // block_size), dtype=np.float32)
-    
+        
+    background = np.zeros((height, width), dtype=np.float32)
+
     for i in range(8, height, block_size):
         for j in range(8, width, block_size):
             background[(i-8)//block_size, (j-8)//block_size] = np.min(image_1[i-8:i+8, j-8:j+8])
-    
-    # Interpolate background to match image size
-    background = np.kron(background, np.ones((block_size, block_size)))[:height, :width]
-    
+        
     # Subtract background
     background = np.clip(background.astype(np.uint8) - 10, 0, 255)
-    image_1 = np.clip(image - background, 0, 255)
-    
+    image_1 = image - background
+        
     image_2 = image_1.copy()
     med = np.median(image_1)
-    
+
     # Apply threshold
-    image_2[image_2 < (med + 3 * std)] = 0
+    image_2[image_2 < (med + 3*std)] = 0
     
     # Detect peaks using peak_local_max
     peak_coords = peak_local_max(image_2, min_distance=int(sigma), threshold_abs=threshold)
@@ -366,7 +309,10 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
     return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
-def draw_circle(radius, y_centre, x_centre, background_dim, dimension, colour=[255, 255, 255]):
+
+# Midpoint circle algorithm 
+def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+
 
     diameter = 2 * radius + 1
     circle_array = np.zeros((background_dim, background_dim, dimension), dtype=np.uint8)
@@ -396,20 +342,25 @@ def draw_circle(radius, y_centre, x_centre, background_dim, dimension, colour=[2
     
     return circle_array
 
-# def plot_circles(image, radius, y_centre, x_centre, background_dim, dimension=3, colour=[255, 255, 255]):
-#     circle_array = draw_circle(radius, y_centre, x_centre, background_dim, dimension, colour)
-#     mask = (all_arr == [255, 255, 255])
-#     image_3d = np.repeat(image[..., np.newaxis], 3, -1)
-
-
-#     # Set the pixels in the mask to be yellow
-#     image_3d[mask] = [255]
-
-#     # Display the modified image
-#     plt.imshow(image_3d)
-#     plt.show()
+def plot_cicle(image, radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+    circle_array = draw_circle(4, y_centre, x_centre, image.shape[0])
+    mask = (circle_array == [255, 255, 0]).all(axis=-1)
+    try:
+        if image.ndim == 2:
+            image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+        elif image.ndim==3 and image.shape[2]==3:
+            image_3d = image
+    except Exception as e:
+        print(f"Error plotting circle: {e}")
+        return None
     
+    # Set the pixels in the mask to be yellow
+    image_3d[mask] = [255, 255, 0]
+    # Display the modified image
 
+    plt.imshow(image_3d)
+    plt.show()
+    
 # Event listener for hover functionality
 # Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
 # def display_peak_trigger(event, fig, scatter_data):
