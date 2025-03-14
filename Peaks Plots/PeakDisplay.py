@@ -31,21 +31,15 @@ params_x_man_10, params_y_man_10 = find_polyfit_params(CH1_peaks_10, CH2_peaks_1
 mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_man_10).astype(np.uint16)
 poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
 
-#Interactive Plots
-fig = plt.figure(figsize=(8, 8))
-ax = fig.subplots()
+circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0], 3)
+circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0], 3)
 
-ax.imshow(image, alpha=0.8, cmap="gray")
-ax.set_title(f"Polymap, tolerance=4 ({poly_pair_count_tol4_10} pairs)")
-scat1=ax.scatter(poly_pair_arr_CH1_tol4_10[:, 1], poly_pair_arr_CH1_tol4_10[:, 0], s=50, facecolors='none', edgecolors='y', label='Poly Pairs')
-scat2=ax.scatter(poly_pair_arr_CH2_tol4_10[:, 1], poly_pair_arr_CH2_tol4_10[:, 0], s=50, facecolors='none', edgecolors='y')
-ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.06))
+all_arr = np.add(circle_array_CH1, circle_array_CH2)
+mask = (all_arr == [255, 255, 255]).all(axis=-1)
+image_3d = np.repeat(image[..., np.newaxis], 3, -1)
 
-annot = init_annot(ax=ax)
-
-scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10, "CH1"), (scat2, poly_pair_arr_CH2_tol4_10, "CH2")]
-# Connect hover event to the figure
-fig.canvas.mpl_connect("motion_notify_event", lambda event: print_coords_trigger(event, fig, scatter_data))
-fig.canvas.mpl_connect("button_press_event", lambda event: print_coords_trigger(event, fig, scatter_data))
-
+# Set the pixels in the mask to be yellow
+image_3d[mask] = [255, 255, 0]
+# Display the modified image
+plt.imshow(image_3d)
 plt.show()
