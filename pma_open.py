@@ -28,31 +28,42 @@ def read_pma_f0(pma_file_path):
 
             #Read the binary image data
             frame_data0 = f.read(X_pixels * Y_pixels)
-            #Convert the frame data into a 3D numpy array 512,512, 3 (RGB)
+
             image_data = np.frombuffer(frame_data0, dtype=np.uint8).reshape((Y_pixels, X_pixels))
             image_data_rgb = np.stack((image_data,) * 3, axis=-1)
-            return image_data_rgb
+
+            return image_data
 
     except Exception as e:
         print(f"Error reading .pma file: {e}")
         return None
 
+
 def read_pma(pma_file_path):
     try:
         with open(pma_file_path, "rb") as f:
-            #Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
-            #<:little-endian (least significant byte first), HH:two 16-bit integers
+            # Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
             X_pixels, Y_pixels = struct.unpack("<HH", f.read(4))
             print(f"Image Size: {X_pixels} x {Y_pixels}")
             
-            #Calc number of frames
-            f.seek(0, 2) #sets pointer to end of file .seek(offset, from_what)
-            filesize = f.tell() #returns current (end) position of pointer
-            Nframes = (filesize - 4) // (X_pixels * Y_pixels)  #Assuming 4-byte header
-            f.seek(0, 4) #Reset file pointer to immediately after 4 byte header
+            # Calculate number of frames
+            f.seek(0, 2)  # sets pointer to end of file
+            filesize = f.tell()  # returns current (end) position of pointer
+            Nframes = (filesize - 4) // (X_pixels * Y_pixels)  # Assuming 4-byte header
+            f.seek(4)  # Reset file pointer to immediately after 4 byte header
 
-            #Return a list of 2D numpy arrays, each representing a frame
-            return [np.frombuffer(f.read(X_pixels * Y_pixels), dtype=np.uint8).reshape((Y_pixels, X_pixels)) for frame_idx in range(Nframes)]
+            # Create a list of 3D numpy arrays (512, 512, 3) (RGB), each representing a frame
+            Frames_arr = []
+            for frame_idx in range(Nframes):
+                # Read the binary image data
+                frame_data = f.read(X_pixels * Y_pixels)
+                # Convert to NumPy array and reshape to (Y_pixels, X_pixels)
+                image_data = np.frombuffer(frame_data, dtype=np.uint8).reshape((Y_pixels, X_pixels))
+                # Convert grayscale image to RGB by stacking the grayscale data along the third axis
+                image_data_rgb = np.stack((image_data,) * 3, axis=-1)
+                Frames_arr.append(image_data_rgb)
+            
+            return Frames_arr
 
     except Exception as e:
         print(f"Error reading .pma file: {e}")
@@ -112,7 +123,6 @@ def avg_frame_arr(pma_file_path):
 
         Frames_data = read_pma(pma_file_path)
         avg_frame_data = np.mean(Frames_data, axis=0).astype(np.uint8)
-        avg_frame_data = np.repeat(avg_frame_data[..., np.newaxis], 3, -1)
         print(f"Sucessfully generated average frame")
         return avg_frame_data
 
@@ -138,6 +148,9 @@ def avg_frame_png(pma_file_path):
     except Exception as e:
         print(f"Error generating average frame: {e}")
         return None
+
+def dim_to_3(image):
+    return np.stack((image,) * 3, axis=-1)
 
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
     std = 4*sigma
