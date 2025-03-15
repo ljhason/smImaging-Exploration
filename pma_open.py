@@ -278,7 +278,6 @@ def apply_polyfit_params(CH1_peaks, params_x, params_y):
     y_mapped = np.polyval(params_y, y1)  # Apply Y transformation
     return np.column_stack((y_mapped, x_mapped))  # Return transformed points
 
-# Some 
 def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
     # we are comparing mapped peaks to CH2 peaks
     map_list = [tuple(peak) for peak in mapped_peaks]
