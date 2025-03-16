@@ -31,15 +31,93 @@ params_x_man_10, params_y_man_10 = find_polyfit_params(CH1_peaks_10, CH2_peaks_1
 mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_man_10).astype(np.uint16)
 poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
 
-circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0], 3)
-circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0], 3)
+# This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
+circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0])
+circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0])
+circle_array_new = circle_array_CH1 + circle_array_CH2
 
-all_arr = np.add(circle_array_CH1, circle_array_CH2)
-mask = (all_arr == [255, 255, 255]).all(axis=-1)
-image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+mask_new = (circle_array_new == [255, 255, 0]).all(axis=-1)
+if image.ndim == 2:
+    image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+elif image.ndim==3 and image.shape[2]==3:
+    image_3d = image
+image_3d[mask_new] = [255, 255, 0]
 
-# Set the pixels in the mask to be yellow
-image_3d[mask] = [255, 255, 0]
-# Display the modified image
-plt.imshow(image_3d)
+# fig = plt.figure(figsize=(8,8))
+# ax = fig.subplots()
+# plt.imshow(image_3d)
+# scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
+# scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='r', alpha=0)
+# plt.title('PolyMap circle display')
+
+# def display_peak_trigger(event, scatter_data):
+#     """ Checks if the mouse hovers over a point and updates annotation """
+#     visible = False
+#     for scatter, peaks, label in scatter_data:
+#         cont, ind = scatter.contains(event)  # Check if cursor is over a scatter point
+#         if cont:
+#             update_annot(ind, scatter, peaks, label)  # Update annotation
+#             visible = True
+#             if event.name == "button_press_event":
+#                 # Display a zoomed in version of the peak figure (10 pixels in all directions)
+#                 zoomed_in_peak = peaks[ind["ind"][0]]
+#                 plot_circle(image, 10, zoomed_in_peak[1], zoomed_in_peak[0], image.shape[0])
+#                 plt.show()
+#             break
+
+#     annot.set_visible(visible)  # Show annotation only if hovering over a point
+#     fig.canvas.draw_idle()  # Redraw figure to update annotation
+
+# annot = init_annot(ax=ax)
+
+# #must define scat1 and scat 2!!
+# scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]
+# fig.canvas.mpl_connect("motion_notify_event", lambda event: display_peak_trigger(event, scatter_data))
+# fig.canvas.mpl_connect("button_press_event", lambda event: display_peak_trigger(event, scatter_data))
+
+# plt.show()
+
+# Create main figure
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.imshow(image_3d)
+ax.set_title("Click to Zoom In")
+
+# Create an inset zoomed-in axis
+zoom_size = 5  # Size of zoomed-in region
+# place ax_zoom in the top right corner of the figure
+
+ax_zoom_CH1 = fig.add_axes([0.75, 0.6, 0.2, 0.2])
+ax_zoom_CH1.set_xticks([])
+ax_zoom_CH1.set_yticks([])
+ax_zoom_CH1.set_title("Zoomed In CH1")
+
+# ax_zoom_CH2 = fig.add_axes([0.75, 0.3, 0.2, 0.2])
+# ax_zoom_CH2.set_xticks([])
+# ax_zoom_CH2.set_yticks([])
+# ax_zoom_CH2.set_title("Zoomed In CH2")
+
+def zoom_trigger(event):
+    """ Handles mouse click event to zoom in on the clicked point. """
+    if event.inaxes != ax:  # Ensure click is within the main image
+        return
+    
+    x_CH1, y_CH1 = int(event.xdata), int(event.ydata)  # Get click coordinates
+    
+    # Define zoom region (clipping edges if necessary)
+    x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+    y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
+
+    # Extract and display the zoomed-in portion
+    zoomed_image = image_3d[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
+    ax_zoom_CH1.clear()
+    ax_zoom_CH1.imshow(zoomed_image, cmap="gray")
+    ax_zoom_CH1.set_xticks([])
+    ax_zoom_CH1.set_yticks([])
+    ax_zoom_CH1.set_title(f"Zoomed In ({y1_CH1}:{y2_CH1}, {x1_CH1}:{x2_CH1})")
+    # could try adding a feature where if the up, down, left or right buttons are clicked the zoom region changes
+    fig.canvas.draw_idle()  # Redraw figure
+
+# Connect click event to function
+fig.canvas.mpl_connect("button_press_event", zoom_trigger)
+
 plt.show()
