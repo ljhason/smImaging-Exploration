@@ -193,9 +193,8 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
 def shift_peaks(peaks, shift=[0, 256]):
     return np.add(peaks, shift)
 
-# make the arrow point from below the point
-
-def init_annot(ax, text="", xy=(0, 0), xytext=(0, 10),textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->")):
+#change the arrow colour to white
+def init_annot(ax, text="", xy=(0, 0), xytext=(0, 10),textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->", color="w")):
     global annot
     annot = ax.annotate(text, xy=xy, xytext=xytext, textcoords=textcoords, bbox=bbox, arrowprops=arrowprops)
     annot.set_visible(False)
@@ -210,9 +209,6 @@ def update_annot(ind, scatter, peaks, label):
     annot.set_text(f"{label} Peak {idx}: (y, x) = ({y}, {x})")
     annot.set_visible(True)
 
-
-# Event listener for hover functionality
-# Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
 def print_coords_trigger(event, fig, scatter_data):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
@@ -351,20 +347,3 @@ def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255
 
     plt.imshow(image_3d)
     plt.show()
-    
-# Event listener for hover functionality
-# Please note that python uses [row,col] however I print [x,y] therefore transformations need to be done and users must be wary of this
-# def display_peak_trigger(event, fig, scatter_data):
-#     """ Checks if the mouse hovers over a point and updates annotation """
-#     visible = False
-#     for scatter, peaks, label in scatter_data:
-#         cont, ind = scatter.contains(event)
-#         if cont:
-#             update_annot(ind, scatter, peaks, label)
-#             visible = True
-#             if event.name == "button_press_event":
-#                 #### Add code here to display peak and peak counterpart
-#             break
-
-#     annot.set_visible(visible)
-#     fig.canvas.draw_idle()
