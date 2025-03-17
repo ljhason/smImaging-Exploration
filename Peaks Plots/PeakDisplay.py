@@ -52,77 +52,9 @@ scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0
 ax.set_title("Mapped Peaks: Click to Zoom In")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]
-zoom_size = 6 
+# zoom_size = 5
 ax_zoom_CH1 = fig.add_axes([0.75, 0.6, 0.2, 0.2])
 ax_zoom_CH2 = fig.add_axes([0.75, 0.3, 0.2, 0.2])
-
-def on_hover(event, fig, scatter_data):
-    """ Checks if the mouse hovers over a point and updates annotation """
-    visible = False
-    for scatter, peaks, label in scatter_data:
-        cont, ind = scatter.contains(event)
-        if cont:
-            update_annot(ind, scatter, peaks, label)
-            visible = True
-            idx = ind['ind'][0]
-            # y_clicked, x_clicked = peaks[idx]
-
-            if event.name == "button_press_event":
-                for patch in ax.patches:
-                    patch.remove()
-                
-                #change y and x of cooresponding peak in other channel as the same index peak in other channel
-                if label == "CH1":
-                    y, x = poly_pair_arr_CH1_tol4_10[idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    zoomed_image = image_3d[y1:y2, x1:x2]
-                    ax_zoom_CH1.clear()
-                    ax_zoom_CH1.imshow(zoomed_image, cmap="gray")
-                    ax_zoom_CH1.set_xticks([])
-                    ax_zoom_CH1.set_yticks([])
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='r', facecolor='none')
-                    ax.add_patch(rect1)
-
-                    ax_zoom_CH2.clear()
-                    y_CH2, x_CH2 = poly_pair_arr_CH2_tol4_10[idx]
-                    x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
-                    y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
-                    zoomed_image_CH2 = image_3d[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
-                    ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
-                    ax_zoom_CH2.set_xticks([])
-                    ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y1_CH2}:{y2_CH2}, {x1_CH2}:{x2_CH2})")
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect2)
-                else:
-                    ax_zoom_CH2.clear()
-                    y, x = poly_pair_arr_CH2_tol4_10[idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    zoomed_image = image_3d[y1:y2, x1:x2]
-                    ax_zoom_CH2.imshow(zoomed_image, cmap="gray")
-                    ax_zoom_CH2.set_xticks([])
-                    ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect2)
-
-                    ax_zoom_CH1.clear()
-                    y_CH1, x_CH1 = poly_pair_arr_CH1_tol4_10[idx]
-                    x1_CH1, x2_CH1 = max(0, x_CH1- zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
-                    y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
-                    zoomed_image_CH1 = image_3d[y1_CH1:y2_CH1, x1:x2_CH1]
-                    ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
-                    ax_zoom_CH1.set_xticks([])
-                    ax_zoom_CH1.set_yticks([])
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y1_CH1}:{y2_CH1}, {x1_CH1}:{x2_CH1})")
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='r', facecolor='none')
-                    ax.add_patch(rect1)
-
-    annot.set_visible(visible)
-    fig.canvas.draw_idle()
 
 annot = init_annot(ax=ax)
 
