@@ -12,6 +12,7 @@ from PIL import Image
 from skimage.util.shape import view_as_blocks
 from skimage.feature import peak_local_max
 from matplotlib.widgets import Cursor, Button
+from matplotlib import patches
 
 def read_pma_f0(pma_file_path):
     try:
@@ -300,8 +301,6 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
 # Midpoint circle algorithm 
 def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
 
-
-    diameter = 2 * radius + 1
     circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
     
 
@@ -348,7 +347,8 @@ def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255
     plt.imshow(image_3d)
     plt.show()
 
-def on_hover(event, fig, scatter_data, zoom_size=5):
+
+def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     for scatter, peaks, label in scatter_data:
@@ -357,15 +357,20 @@ def on_hover(event, fig, scatter_data, zoom_size=5):
             update_annot(ind, scatter, peaks, label)
             visible = True
             idx = ind['ind'][0]
-            # y_clicked, x_clicked = peaks[idx]
 
             if event.name == "button_press_event":
                 for patch in ax.patches:
                     patch.remove()
-                
+                    
+                for ax_zoom in fig.axes:
+                    if ax_zoom is not ax:  # Keep the main axis
+                        fig.delaxes(ax_zoom)
+
+                ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
+                ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
                 #change y and x of cooresponding peak in other channel as the same index peak in other channel
                 if label == "CH1":
-                    y, x = poly_pair_arr_CH1_tol4_10[idx]
+                    y, x = scatter_data[0][1][idx]
                     x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
                     y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
                     zoomed_image = image_3d[y1:y2, x1:x2]
@@ -373,12 +378,12 @@ def on_hover(event, fig, scatter_data, zoom_size=5):
                     ax_zoom_CH1.imshow(zoomed_image, cmap="gray")
                     ax_zoom_CH1.set_xticks([])
                     ax_zoom_CH1.set_yticks([])
+                    ax_zoom_CH1.set_title("")
                     ax_zoom_CH1.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
                     rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='r', facecolor='none')
                     ax.add_patch(rect1)
-
                     ax_zoom_CH2.clear()
-                    y_CH2, x_CH2 = poly_pair_arr_CH2_tol4_10[idx]
+                    y_CH2, x_CH2 = scatter_data[1][1][idx]
                     x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
                     y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
                     zoomed_image_CH2 = image_3d[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -390,7 +395,7 @@ def on_hover(event, fig, scatter_data, zoom_size=5):
                     ax.add_patch(rect2)
                 else:
                     ax_zoom_CH2.clear()
-                    y, x = poly_pair_arr_CH2_tol4_10[idx]
+                    y, x = scatter_data[1][1][idx]
                     x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
                     y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
                     zoomed_image = image_3d[y1:y2, x1:x2]
@@ -402,7 +407,7 @@ def on_hover(event, fig, scatter_data, zoom_size=5):
                     ax.add_patch(rect2)
 
                     ax_zoom_CH1.clear()
-                    y_CH1, x_CH1 = poly_pair_arr_CH1_tol4_10[idx]
+                    y_CH1, x_CH1 = scatter_data[0][1][idx]
                     x1_CH1, x2_CH1 = max(0, x_CH1- zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
                     y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                     zoomed_image_CH1 = image_3d[y1_CH1:y2_CH1, x1:x2_CH1]
@@ -415,3 +420,35 @@ def on_hover(event, fig, scatter_data, zoom_size=5):
 
     annot.set_visible(visible)
     fig.canvas.draw_idle()
+
+
+def count_circle(radius, y_centre, x_centre):
+    x = radius
+    y = 0
+    total = 0
+    #filling in the circle
+    for i in range(x_centre - radius, x_centre + radius + 1):
+        for j in range(y_centre - radius, y_centre + radius + 1):
+            if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
+                total +=1
+    
+    return total
+
+def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
+    x = radius
+    y = 0
+
+    intensity_arr_all_peaks = []
+    total_arr = []
+
+    #filling in the circle
+    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+        total = 0
+        for i in range(x_centre - radius, x_centre+ radius + 1):
+            for j in range(y_centre - radius, y_centre + radius + 1):
+                if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
+                    intensity_arr_all_peaks.append(input_array[i][j][0])
+                    total += int(input_array[i][j][0])
+        total_arr.append(total)
+
+    return intensity_arr_all_peaks, total_arr
