@@ -1,6 +1,5 @@
 from pathlib import Path
 import sys
-from matplotlib import patches
 
 current_file_path = Path(__file__)
 # Get the parent directory of the current directory (i.e., SummerProject)
@@ -52,13 +51,10 @@ scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0
 ax.set_title("Mapped Peaks: Click to Zoom In")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]
-# zoom_size = 5
-ax_zoom_CH1 = fig.add_axes([0.75, 0.6, 0.2, 0.2])
-ax_zoom_CH2 = fig.add_axes([0.75, 0.3, 0.2, 0.2])
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: on_hover(event, fig, scatter_data))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover(event, fig, scatter_data))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_hover(event, fig, ax, scatter_data, image_3d))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover(event, fig, ax, scatter_data, image_3d))
 
 plt.show()
