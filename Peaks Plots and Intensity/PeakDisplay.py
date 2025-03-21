@@ -46,7 +46,7 @@ image_3d[mask_new] = [255, 255, 0]
 # Create main figure
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.imshow(image_3d)
-scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
+scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
 scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='r', alpha=0)
 ax.set_title("Mapped Peaks: Click to Zoom In")
 
