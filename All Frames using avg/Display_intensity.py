@@ -42,10 +42,10 @@ elif image.ndim==3 and image.shape[2]==3:
     image_3d = image
 image_3d[mask_new] = [255, 255, 0]
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, Intense_axes=[0.6, 0.6, 0.6, 0.2]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, Intense_axes=[0.2, 0.05, 0.6, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
-    zoom_size=4
+    zoom_size=6
     for scatter, peaks, label in scatter_data:
         cont, ind = scatter.contains(event)
         if cont:
@@ -74,8 +74,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
 
 
-                    tot_intensity_all_frames_p1_CH1 = []
-                    tot_intensity_all_frames_p1_CH2 = []
+                    tot_intensity_all_frames_CH1 = []
+                    tot_intensity_all_frames_CH2 = []
 
                     for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
 
@@ -86,20 +86,23 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                             frame_3d = Frames_data[i]
                         frame_3d[mask_new] = [255, 255, 0]
 
-                        total_intensity_p1_CH1,_ = intensity_in_circle(frame_3d, 4, y, x)
-                        total_intensity_p1_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
-                        tot_intensity_all_frames_p1_CH1.append(total_intensity_p1_CH1)
-                        tot_intensity_all_frames_p1_CH2.append(total_intensity_p1_CH2)
+                        total_intensity_CH1,_ = intensity_in_circle(frame_3d, 4, y, x)
+                        total_intensity_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
+                        tot_intensity_all_frames_CH1.append(total_intensity_CH1)
+                        tot_intensity_all_frames_CH2.append(total_intensity_CH2)
                     
-                    time = np.arange(0, len(tot_intensity_all_frames_p1_CH1)/100, tpf)
+                    time = np.arange(0, len(tot_intensity_all_frames_CH1)/100, tpf)
                     ax_intensity.clear()
-                    ax_intensity.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
-                    ax_intensity.plot(time, tot_intensity_all_frames_p1_CH2, color='r', label='CH2')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
                     ax_intensity.set_title(f"Intensity v Time in Peak {idx}")
+                    #legend location outside of the plot
+                    ax_intensity.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
 
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
+                    
+                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='r', facecolor='none')
+                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
                 else:
                     ax_intensity.clear()
@@ -130,13 +133,13 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                         tot_intensity_all_frames_CH1.append(total_intensity_CH1)
 
                     time = np.arange(0, len(tot_intensity_all_frames_CH2)/100, tpf)
-                    ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='r', label='CH2')
-                    ax_intensity.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
                     ax_intensity.set_title(f"Intensity v Time in Peak {idx}")
-
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='r', facecolor='none')
+                    ax_intensity.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='r', facecolor='none')
+                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
 
     annot.set_visible(visible)
@@ -145,11 +148,14 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
 
 # Create main figure
 
-fig, ax = plt.subplots(figsize=(8, 8))
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(111)
+#
+ax.set_position([0.2, 0.3, 0.6, 0.6])
 ax.imshow(image_3d)
 
 scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
-scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='r', alpha=0)
+scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
 ax.set_title("Mapped Peaks: Click For Intensity v Time")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]

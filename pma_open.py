@@ -380,7 +380,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH1.set_yticks([])
                     ax_zoom_CH1.set_title("")
                     ax_zoom_CH1.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='r', facecolor='none')
+                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
                     ax_zoom_CH2.clear()
                     y_CH2, x_CH2 = scatter_data[1][1][idx]
@@ -391,7 +391,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH2.set_xticks([])
                     ax_zoom_CH2.set_yticks([])
                     ax_zoom_CH2.set_title(f"Zoomed In ({y1_CH2}:{y2_CH2}, {x1_CH2}:{x2_CH2})")
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
+                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
                 else:
                     ax_zoom_CH2.clear()
@@ -403,7 +403,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH2.set_xticks([])
                     ax_zoom_CH2.set_yticks([])
                     ax_zoom_CH2.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
+                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
 
                     ax_zoom_CH1.clear()
@@ -415,7 +415,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH1.set_xticks([])
                     ax_zoom_CH1.set_yticks([])
                     ax_zoom_CH1.set_title(f"Zoomed In ({y1_CH1}:{y2_CH1}, {x1_CH1}:{x2_CH1})")
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='r', facecolor='none')
+                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
 
     annot.set_visible(visible)
