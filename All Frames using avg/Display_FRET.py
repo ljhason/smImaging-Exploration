@@ -42,7 +42,7 @@ elif image.ndim==3 and image.shape[2]==3:
     image_3d = image
 image_3d[mask_new] = [255, 255, 0]
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, Intense_axes_CH1=[0.48, 0.7, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.45, 0.5, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, Intense_axes_CH1=[0.48, 0.7, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.45, 0.5, 0.15], FRET_axes=[0.48, 0.20, 0.5, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -64,6 +64,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
 
                 ax_intensity_CH1= fig.add_axes(Intense_axes_CH1)
                 ax_intensity_CH2= fig.add_axes(Intense_axes_CH2)
+                ax_FRET = fig.add_axes(FRET_axes)
                 #change y and x of cooresponding peak in other channel as the same index peak in other channel
 
                 if label == "CH1":
@@ -96,14 +97,25 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     ax_intensity_CH1.clear()
                     ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
                     ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
+                    # ax_intensity_CH1.set_xlabel('Time (s)')
+                    ax_intensity_CH1.set_ylabel('Intensity')
 
                     ax_intensity_CH2.clear()               
                     ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
                     ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+                    # ax_intensity_CH2.set_xlabel('Time (s)')
+                    ax_intensity_CH2.set_ylabel('Intensity')
 
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
+                    FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
+                    ax_FRET.clear()               
+                    ax_FRET.plot(time, FRET_values, color='r')
+                    ax_FRET.set_title(f"FRET v Time in Pair {idx}")
+                    ax_FRET.set_xlabel('Time (s)')
+                    ax_FRET.set_ylabel('FRET Efficiency')
+
+                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
+                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
                 else:
                     ax_intensity_CH1.clear()
@@ -137,13 +149,24 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     time = np.arange(0, len(tot_intensity_all_frames_CH2)/100, tpf)
                     ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
                     ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+                    # ax_intensity_CH2.set_xlabel('Time (s)')
+                    ax_intensity_CH2.set_ylabel('Intensity')
 
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
                     ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
+                    # ax_intensity_CH1.set_xlabel('Time (s)')
+                    ax_intensity_CH1.set_ylabel('Intensity')
 
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
+                    FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
+                    ax_FRET.clear()               
+                    ax_FRET.plot(time, FRET_values, color='r')
+                    ax_FRET.set_title(f"FRET v Time in Pair {idx}")
+                    ax_FRET.set_xlabel('Time (s)')
+                    ax_FRET.set_ylabel('FRET Efficiency')
+
+                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
+                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=2, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
 
     annot.set_visible(visible)
