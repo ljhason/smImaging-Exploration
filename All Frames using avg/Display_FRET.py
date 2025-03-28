@@ -152,11 +152,12 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     # ax_intensity_CH2.set_xlabel('Time (s)')
                     ax_intensity_CH2.set_ylabel('Intensity')
 
-                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+
+                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1', alpha=0.3)
                     ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
                     # ax_intensity_CH1.set_xlabel('Time (s)')
                     ax_intensity_CH1.set_ylabel('Intensity')
-
+                    
                     FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                     ax_FRET.clear()               
                     ax_FRET.plot(time, FRET_values, color='r')
@@ -171,6 +172,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
 
     annot.set_visible(visible)
     fig.canvas.draw_idle()
+
 
 
 # Create main figure
@@ -191,5 +193,5 @@ annot = init_annot(ax=ax)
 
 fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_3d))
 fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_3d))
-
+plt.grid()
 plt.show()

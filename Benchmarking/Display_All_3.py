@@ -44,7 +44,7 @@ elif image.ndim==3 and image.shape[2]==3:
     image_3d = image
 image_3d[mask_new] = [255, 255, 0]
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, R_0=56, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.27, 0.06, 0.15, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, R_0=56, Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.27, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -65,8 +65,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                         fig.delaxes(ax_zoom)
                 ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
                 ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
-                ax_intensity_CH1= fig.add_axes(Intense_axes_CH1)
-                ax_intensity_CH2= fig.add_axes(Intense_axes_CH2)
+                ax_intensity= fig.add_axes(Intense_axes)
                 ax_FRET = fig.add_axes(FRET_axes)
                 ax_dist = fig.add_axes(dist_axes)
                 #change y and x of cooresponding peak in other channel as the same index peak in other channel
@@ -110,17 +109,14 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                         tot_intensity_all_frames_CH2.append(total_intensity_CH2)
                     
                     time = np.arange(0, len(tot_intensity_all_frames_CH1)/100, tpf)
-                    ax_intensity_CH1.clear()
-                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
-                    ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
-                    ax_intensity_CH1.set_xlabel('Time (s)')
-                    ax_intensity_CH1.set_ylabel('Intensity')
-
-                    ax_intensity_CH2.clear()               
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
-                    ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
-                    ax_intensity_CH2.set_xlabel('Time (s)')
-                    ax_intensity_CH2.set_ylabel('Intensity')
+                    ax_intensity.clear()
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
+                    ax_intensity.set_title(f"Intensity v Time in  Peak {idx}")
+                    ax_intensity.set_xlabel('Time (s)')
+                    ax_intensity.set_ylabel('Intensity')
+                    ax_intensity.set_ylim(-255, max(max(tot_intensity_all_frames_CH1), max(tot_intensity_all_frames_CH2))+500)
+                    ax_intensity.legend(bbox_to_anchor=(1.0, 1.2), loc='upper right')
 
                     FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                     ax_FRET.clear()               
@@ -141,8 +137,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
                 else:
-                    ax_intensity_CH1.clear()
-                    ax_intensity_CH2.clear()
+
+                    ax_intensity.clear()
                     y, x = scatter_data[1][1][idx]
                     x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
                     y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
@@ -178,15 +174,12 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                         tot_intensity_all_frames_CH1.append(total_intensity_CH1)
 
                     time = np.arange(0, len(tot_intensity_all_frames_CH2)/100, tpf)
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
-                    ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
-                    ax_intensity_CH2.set_xlabel('Time (s)')
-                    ax_intensity_CH2.set_ylabel('Intensity')
-
-                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
-                    ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
-                    ax_intensity_CH1.set_xlabel('Time (s)')
-                    ax_intensity_CH1.set_ylabel('Intensity')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
+                    ax_intensity.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+                    ax_intensity.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+                    ax_intensity.set_xlabel('Time (s)')
+                    ax_intensity.set_ylabel('Intensity')
+                    ax_intensity.legend(bbox_to_anchor=(1.0, 1.2), loc='upper right')
 
                     FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                     ax_FRET.clear()               
