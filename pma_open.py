@@ -468,6 +468,14 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
     return total_intensity, intensity_arr
 
 
+def calc_FRET(I_D_list, I_A_list):
+    I_D, I_A = np.array(I_D_list), np.array(I_A_list)
+    FRET_arr = I_A/(I_D + I_A)
+    return FRET_arr.tolist()
+
+def calc_distance(FRET_list, R_0):
+    d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
+    return d.tolist()
 
 # def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=100, CH1_zoom_axes=[0.75, 0.6, 0.8, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.8, 0.2]):
 #     """ Checks if the mouse hovers over a point and updates annotation """
@@ -513,7 +521,7 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
 #                     ax_zoom_CH1.clear()
 #                     ax_zoom_CH1.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
 #                     ax_zoom_CH1.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
+#                     rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none')
 #                     ax.add_patch(rect1)
 #                     ax_zoom_CH2.clear()
 #                     y_CH2, x_CH2 = scatter_data[1][1][idx]
@@ -533,7 +541,7 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
 #                         tot_intensity_all_frames_p1_CH2.append(total_intensity_p1_CH2)
 #                     ax_zoom_CH2.plot(time, tot_intensity_all_frames_p1_CH1, color='r', label='CH2')
 #                     ax_zoom_CH2.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='r', facecolor='none')
+#                     rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='r', facecolor='none')
 #                     ax.add_patch(rect2)
 #                 else:
 #                     ax_zoom_CH2.clear()
@@ -554,7 +562,7 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
 #                         tot_intensity_all_frames_p1_CH2.append(total_intensity_p1_CH2)
 #                     time = np.arange(0, len(tot_intensity_all_frames_p1_CH2), tpf)
 #                     ax_zoom_CH2.plot(time, tot_intensity_all_frames_p1_CH2, color='r', label='CH2')
-#                     rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='r', facecolor='none')
+#                     rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='r', facecolor='none')
 #                     ax.add_patch(rect2)
 
 #                     ax_zoom_CH1.clear()
@@ -575,7 +583,7 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
                     
 #                     ax_zoom_CH1.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
 #                     ax_zoom_CH1.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='r', facecolor='none')
+#                     rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=2, edgecolor='r', facecolor='none')
 #                     ax.add_patch(rect1)
 
 #     annot.set_visible(visible)
