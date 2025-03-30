@@ -379,7 +379,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH1.set_xticks([])
                     ax_zoom_CH1.set_yticks([])
                     ax_zoom_CH1.set_title("")
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
+                    ax_zoom_CH1.set_title(f"Zoomed In ({y}, {x})")
                     rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
                     ax_zoom_CH2.clear()
@@ -390,7 +390,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
                     ax_zoom_CH2.set_xticks([])
                     ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y1_CH2}:{y2_CH2}, {x1_CH2}:{x2_CH2})")
+                    ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
                     rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
                 else:
@@ -402,7 +402,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH2.imshow(zoomed_image, cmap="gray")
                     ax_zoom_CH2.set_xticks([])
                     ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y1}:{y2}, {x1}:{x2})")
+                    ax_zoom_CH2.set_title(f"Zoomed In ({y}, {x})")
                     rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)
 
@@ -414,7 +414,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
                     ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
                     ax_zoom_CH1.set_xticks([])
                     ax_zoom_CH1.set_yticks([])
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y1_CH1}:{y2_CH1}, {x1_CH1}:{x2_CH1})")
+                    ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH1})")
                     rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
                     ax.add_patch(rect1)
 
@@ -476,115 +476,3 @@ def calc_FRET(I_D_list, I_A_list):
 def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
-
-# def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=100, CH1_zoom_axes=[0.75, 0.6, 0.8, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.8, 0.2]):
-#     """ Checks if the mouse hovers over a point and updates annotation """
-#     visible = False
-#     zoom_size=4
-#     for scatter, peaks, label in scatter_data:
-#         cont, ind = scatter.contains(event)
-#         if cont:
-#             update_annot(ind, scatter, peaks, label)
-#             visible = True
-#             idx = ind['ind'][0]
-
-#             if event.name == "button_press_event":
-#                 Frames_data = read_pma(pma_file_path)
-#                 for patch in ax.patches:
-#                     patch.remove()
-                    
-#                 for ax_zoom in fig.axes:
-#                     if ax_zoom is not ax:  # Keep the main axis
-#                         fig.delaxes(ax_zoom)
-
-#                 ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
-#                 ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
-#                 #change y and x of cooresponding peak in other channel as the same index peak in other channel
-#                 if label == "CH1":
-#                     y, x = scatter_data[0][1][idx]
-#                     tot_intensity_all_frames_p1_CH1 = []
-#                     for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-
-#                         # transforms from 2D to 3D
-#                         if Frames_data[i].ndim == 2:
-#                             frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-#                         elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-#                             frame_3d = Frames_data[i]
-                        
-#                         frame_3d[mask_new] = [255, 255, 0]
-#                         total_intensity_p1_CH1,_ = intensity_in_circle(frame_3d, 4, y, x)
-#                         tot_intensity_all_frames_p1_CH1.append(total_intensity_p1_CH1)
-                    
-#                     x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-#                     y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-#                     time = np.arange(0, len(tot_intensity_all_frames_p1_CH1), tpf)
-#                     ax_zoom_CH1.clear()
-#                     ax_zoom_CH1.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
-#                     ax_zoom_CH1.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none')
-#                     ax.add_patch(rect1)
-#                     ax_zoom_CH2.clear()
-#                     y_CH2, x_CH2 = scatter_data[1][1][idx]
-#                     x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
-#                     y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
-#                     tot_intensity_all_frames_p1_CH2 = []
-#                     for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-                        
-#                         # transforms from 2D to 3D
-#                         if Frames_data[i].ndim == 2:
-#                             frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-#                         elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-#                             frame_3d = Frames_data[i]
-                        
-#                         frame_3d[mask_new] = [255, 255, 0]
-#                         total_intensity_p1_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
-#                         tot_intensity_all_frames_p1_CH2.append(total_intensity_p1_CH2)
-#                     ax_zoom_CH2.plot(time, tot_intensity_all_frames_p1_CH1, color='r', label='CH2')
-#                     ax_zoom_CH2.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='r', facecolor='none')
-#                     ax.add_patch(rect2)
-#                 else:
-#                     ax_zoom_CH2.clear()
-#                     y, x = scatter_data[1][1][idx]
-#                     x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-#                     y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-#                     tot_intensity_all_frames_p1_CH2 = []
-#                     for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-                        
-#                         # transforms from 2D to 3D
-#                         if Frames_data[i].ndim == 2:
-#                             frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-#                         elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-#                             frame_3d = Frames_data[i]
-                        
-#                         frame_3d[mask_new] = [255, 255, 0]
-#                         total_intensity_p1_CH2,_ = intensity_in_circle(frame_3d, 4, y, x)
-#                         tot_intensity_all_frames_p1_CH2.append(total_intensity_p1_CH2)
-#                     time = np.arange(0, len(tot_intensity_all_frames_p1_CH2), tpf)
-#                     ax_zoom_CH2.plot(time, tot_intensity_all_frames_p1_CH2, color='r', label='CH2')
-#                     rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='r', facecolor='none')
-#                     ax.add_patch(rect2)
-
-#                     ax_zoom_CH1.clear()
-#                     y_CH1, x_CH1 = scatter_data[0][1][idx]
-#                     x1_CH1, x2_CH1 = max(0, x_CH1- zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
-#                     y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
-#                     for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-
-#                         # transforms from 2D to 3D
-#                         if Frames_data[i].ndim == 2:
-#                             frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-#                         elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-#                             frame_3d = Frames_data[i]
-                        
-#                         frame_3d[mask_new] = [255, 255, 0]
-#                         total_intensity_p1_CH1,_ = intensity_in_circle(frame_3d, 4, y_CH1, x_CH1)
-#                         tot_intensity_all_frames_p1_CH1.append(total_intensity_p1_CH1)
-                    
-#                     ax_zoom_CH1.plot(time, tot_intensity_all_frames_p1_CH1, color='g', label='CH1')
-#                     ax_zoom_CH1.set_title(f"Intensity v Time in Peak {idx}:({y1}:{y2}, {x1}:{x2})")
-#                     rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=2, edgecolor='r', facecolor='none')
-#                     ax.add_patch(rect1)
-
-#     annot.set_visible(visible)
-#     fig.canvas.draw_idle()

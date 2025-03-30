@@ -195,6 +195,7 @@ ax = fig.add_subplot(111)
 #
 ax.set_position([0.03, 0.2, 0.4, 0.6])
 ax.imshow(image_3d)
+ax.grid()
 
 scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
 scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
