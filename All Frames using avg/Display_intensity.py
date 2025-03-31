@@ -32,15 +32,19 @@ mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_m
 poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
-circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0])
-circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0])
-circle_array_new = circle_array_CH1 + circle_array_CH2
-mask_new = (circle_array_new == [255, 255, 0]).all(axis=-1)
+y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
+x_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,1]))
+circle_array_new = draw_circle(4, y_centres, x_centres, image.shape[0])
+
+
+mask = (circle_array_new == [255, 255, 0]).all(axis=-1)
 if image.ndim == 2:
-    image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+    image_copy = image.copy()
+    image_copy = np.repeat(image[..., np.newaxis], 3, -1)
 elif image.ndim==3 and image.shape[2]==3:
-    image_3d = image
-image_3d[mask_new] = [255, 255, 0]
+    image_copy = image.copy()
+
+image_copy[mask] = [255, 255, 0]
 
 def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, Intense_axes_CH1=[0.48, 0.7, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.45, 0.5, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
@@ -65,87 +69,46 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                 ax_intensity_CH1= fig.add_axes(Intense_axes_CH1)
                 ax_intensity_CH2= fig.add_axes(Intense_axes_CH2)
                 #change y and x of cooresponding peak in other channel as the same index peak in other channel
+                y_CH1, x_CH1 = scatter_data[0][1][idx]
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
 
-                if label == "CH1":
-                    y, x = scatter_data[0][1][idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    y_CH2, x_CH2 = scatter_data[1][1][idx]
-                    x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
-                    y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
-
-
-                    tot_intensity_all_frames_CH1 = []
-                    tot_intensity_all_frames_CH2 = []
-
-                    for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-
-                        # transforms from 2D to 3D
-                        if Frames_data[i].ndim == 2:
-                            frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-                        elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-                            frame_3d = Frames_data[i]
-                        frame_3d[mask_new] = [255, 255, 0]
-
-                        total_intensity_CH1,_ = intensity_in_circle(frame_3d, 4, y, x)
-                        total_intensity_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
-                        tot_intensity_all_frames_CH1.append(total_intensity_CH1)
-                        tot_intensity_all_frames_CH2.append(total_intensity_CH2)
-                    
-                    time = np.arange(0, len(tot_intensity_all_frames_CH1)/100, tpf)
-                    ax_intensity_CH1.clear()
-                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
-                    ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
-
-                    ax_intensity_CH2.clear()               
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
-                    ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
-
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect1)
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
-                    ax.add_patch(rect2)
-                else:
-                    ax_intensity_CH1.clear()
-                    ax_intensity_CH2.clear()
-                    y, x = scatter_data[1][1][idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    y_CH1, x_CH1 = scatter_data[0][1][idx]
-                    x1_CH1, x2_CH1 = max(0, x_CH1- zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
-                    y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
-
-                    
-                    tot_intensity_all_frames_CH1 = []
-                    tot_intensity_all_frames_CH2 = []
+                y_CH2, x_CH2 = scatter_data[1][1][idx]
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
 
 
-                    for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
-                        
-                        # transforms from 2D to 3D
-                        if Frames_data[i].ndim == 2:
-                            frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
-                        elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
-                            frame_3d = Frames_data[i]
-                        
-                        frame_3d[mask_new] = [255, 255, 0]
-                        total_intensity_CH2,_ = intensity_in_circle(frame_3d, 4, y, x)
-                        total_intensity_CH1,_ = intensity_in_circle(frame_3d, 4, y_CH1, x_CH1)
-                        tot_intensity_all_frames_CH2.append(total_intensity_CH2)
-                        tot_intensity_all_frames_CH1.append(total_intensity_CH1)
+                tot_intensity_all_frames_CH1 = []
+                tot_intensity_all_frames_CH2 = []
 
-                    time = np.arange(0, len(tot_intensity_all_frames_CH2)/100, tpf)
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
-                    ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+                for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
 
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
-                    ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
+                    # transforms from 2D to 3D
+                    if Frames_data[i].ndim == 2:
+                        frame_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
+                    elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
+                        frame_3d = Frames_data[i]
+                    frame_3d[mask] = [255, 255, 0]
 
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
-                    ax.add_patch(rect2)
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect1)
+                    total_intensity_CH1,_ = intensity_in_circle(frame_3d, 4, y_CH1, x_CH1)
+                    total_intensity_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
+                    tot_intensity_all_frames_CH1.append(total_intensity_CH1)
+                    tot_intensity_all_frames_CH2.append(total_intensity_CH2)
+                
+                time= np.linspace(0, (len(tot_intensity_all_frames_CH1) - 1) * tpf, len(tot_intensity_all_frames_CH1))
+                ax_intensity_CH1.clear()
+                ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='g', label='CH1')
+                ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
 
+                ax_intensity_CH2.clear()               
+                ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='b', label='CH2')
+                ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
+                ax.add_patch(rect1)
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
+                ax.add_patch(rect2)
+                
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
@@ -156,17 +119,17 @@ fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(111)
 #
 ax.set_position([0.03, 0.2, 0.4, 0.6])
-ax.imshow(image_3d)
+ax.imshow(image_copy)
 
-scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
-scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
 ax.set_title("Mapped Peaks: Click For Intensity v Time")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_3d))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_3d))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_copy))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity(event, file_path, fig, ax, scatter_data, image_copy))
 
 plt.show()
