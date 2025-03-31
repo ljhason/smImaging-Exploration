@@ -25,7 +25,7 @@ def read_pma_f0(pma_file_path):
             #Calc number of frames
             f.seek(0, 2) #sets pointer to end of file .seek(offset, from_what)
             filesize = f.tell() #returns current (end) position of pointer
-            Nframes = (filesize - 4) // (X_pixels * Y_pixels)  #Assuming 4-byte header
+            # Nframes = (filesize - 4) // (X_pixels * Y_pixels)  #Assuming 4-byte header
             f.seek(0, 4) #Reset file pointer to immediately after 4 byte header
 
             #Read the binary image data
@@ -121,7 +121,6 @@ def avg_frame_arr(pma_file_path):
 
 def avg_frame_png(pma_file_path):
     try:
-        Frames_data = read_pma(pma_file_path)
         avg_frame_data = avg_frame_arr(pma_file_path)
         output_name = pma_file_path.split(".")[-2].split("/")[-1]
         image_file_name = f'{output_name}_Avg_Frame.png'
@@ -347,6 +346,17 @@ def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255
     plt.imshow(image_3d)
     plt.show()
 
+#counts the pixels within the circle (should have 45 if the radius is 4)
+def count_circle(radius, y_centre=12, x_centre=12):
+    total = 0
+    #filling in the circle
+    for i in range(x_centre - radius, x_centre + radius + 1):
+        for j in range(y_centre - radius, y_centre + radius + 1):
+            if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
+                total +=1
+    
+    return total
+
 
 def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
     """ Checks if the mouse hovers over a point and updates annotation """
@@ -423,8 +433,8 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
 
 
 def count_circle(radius, y_centre, x_centre):
-    x = radius
-    y = 0
+    # x = radius
+    # y = 0
     total = 0
     #filling in the circle
     for i in range(x_centre - radius, x_centre + radius + 1):
@@ -435,8 +445,8 @@ def count_circle(radius, y_centre, x_centre):
     return total
 
 def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
-    x = radius
-    y = 0
+    # x = radius
+    # y = 0
 
     intensity_arr_all_peaks = []
     total_arr = []
@@ -454,8 +464,8 @@ def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
     return intensity_arr_all_peaks, total_arr
 
 def intensity_in_circle(input_array, radius, y_centre, x_centre):
-    x = radius
-    y = 0
+    # x = radius
+    # y = 0
     total_intensity = 0
     intensity_arr = []
     #filling in the circle
