@@ -32,9 +32,11 @@ mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_m
 poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
-circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0])
-circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0])
-circle_array_new = circle_array_CH1 + circle_array_CH2
+y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
+x_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,1]))
+circle_array_new = draw_circle(4, y_centres, x_centres, image.shape[0])
+
+
 mask_new = (circle_array_new == [255, 255, 0]).all(axis=-1)
 if image.ndim == 2:
     image_3d = np.repeat(image[..., np.newaxis], 3, -1)
@@ -96,16 +98,18 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     
                     time = np.arange(0, len(tot_intensity_all_frames_CH1)/100, tpf)
                     ax_intensity_CH1.clear()
-                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='b', label='CH1')
+                    ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='g', label='CH1')
                     ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
                     ax_intensity_CH1.set_xlabel('Time (s)')
                     ax_intensity_CH1.set_ylabel('Intensity')
+                    ax_intensity_CH1.grid()
 
                     ax_intensity_CH2.clear()               
-                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='g', label='CH2')
+                    ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='b', label='CH2')
                     ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
                     ax_intensity_CH2.set_xlabel('Time (s)')
                     ax_intensity_CH2.set_ylabel('Intensity')
+                    ax_intensity_CH2.grid()
 
                     FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                     ax_FRET.clear()               
@@ -113,6 +117,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     ax_FRET.set_title(f"FRET v Time in Pair {idx}")
                     ax_FRET.set_xlabel('Time (s)')
                     ax_FRET.set_ylabel('FRET Efficiency')
+                    ax_FRET.grid()
 
                     dist_values = calc_distance(FRET_values, R_0)
                     ax_dist.clear()
@@ -120,10 +125,11 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     ax_dist.set_title(f"Distance v Time in Pair {idx}")
                     ax_dist.set_xlabel('Time (s)')
                     ax_dist.set_ylabel('Distance')
+                    ax_dist.grid()
 
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='b', facecolor='none')
+                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none')
                     ax.add_patch(rect1)
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='g', facecolor='none')
+                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=2, edgecolor='b', facecolor='none')
                     ax.add_patch(rect2)
                 else:
                     ax_intensity_CH1.clear()
@@ -197,8 +203,8 @@ ax.set_position([0.03, 0.2, 0.4, 0.6])
 ax.imshow(image_3d)
 ax.grid()
 
-scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
-scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
 ax.set_title("Mapped Peaks: Click For Intensity v Time")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]

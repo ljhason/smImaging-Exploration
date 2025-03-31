@@ -32,29 +32,30 @@ mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_m
 poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
-circle_array_CH1 = draw_circle(4, poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], image.shape[0])
-circle_array_CH2 = draw_circle(4, poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], image.shape[0])
-circle_array_new = circle_array_CH1 + circle_array_CH2
+y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
+x_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,1]))
+circle_array_new = draw_circle(4, y_centres, x_centres, image.shape[0])
 
-mask_new = (circle_array_new == [255, 255, 0]).all(axis=-1)
+mask = (circle_array_new == [255, 255, 0]).all(axis=-1)
 if image.ndim == 2:
-    image_3d = np.repeat(image[..., np.newaxis], 3, -1)
+    image_copy = image.copy()
+    image_copy = np.repeat(image[..., np.newaxis], 3, -1)
 elif image.ndim==3 and image.shape[2]==3:
-    image_3d = image
-image_3d[mask_new] = [255, 255, 0]
+    image_copy = image.copy()
+image_copy[mask] = [255, 255, 0]
 
 # Create main figure
 fig, ax = plt.subplots(figsize=(8, 8))
-ax.imshow(image_3d)
-scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
-scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+ax.imshow(image_copy)
+scat1 = ax.scatter(poly_pair_arr_CH1_tol4_10[:,1], poly_pair_arr_CH1_tol4_10[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
+scat2 = ax.scatter(poly_pair_arr_CH2_tol4_10[:,1], poly_pair_arr_CH2_tol4_10[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
 ax.set_title("Mapped Peaks: Click to Zoom In")
 
 scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10 , "CH1"), (scat2, poly_pair_arr_CH2_tol4_10 , "CH2")]
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: on_hover(event, fig, ax, scatter_data, image_3d))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover(event, fig, ax, scatter_data, image_3d))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_hover(event, fig, ax, scatter_data, image_copy, image))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover(event, fig, ax, scatter_data, image_copy, image))
 
 plt.show()

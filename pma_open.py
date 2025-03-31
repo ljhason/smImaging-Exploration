@@ -299,35 +299,33 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
 
 # Midpoint circle algorithm 
 def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
-
     circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
-    
-
     # Midpoint circle algorithm
-    x = radius
-    y = 0
+    y = radius
+    x = 0
     p = 1 - radius
     
-    while x >= y:
-        circle_array[x_centre + x, y_centre + y] = colour
-        circle_array[x_centre - x, y_centre + y] = colour
-        circle_array[x_centre + x, y_centre - y] = colour
-        circle_array[x_centre - x, y_centre - y] = colour
-        circle_array[x_centre + y, y_centre + x] = colour
-        circle_array[x_centre - y, y_centre + x] = colour
-        circle_array[x_centre + y, y_centre - x] = colour
-        circle_array[x_centre - y, y_centre - x] = colour
-        
-        y += 1
+    while y >= x:
+        circle_array[y_centre + y, x_centre + x] = colour
+        circle_array[y_centre - y, x_centre + x] = colour
+        circle_array[y_centre + y, x_centre - x] = colour
+        circle_array[y_centre - y, x_centre - x] = colour
+        circle_array[y_centre + x, x_centre + y] = colour
+        circle_array[y_centre - x, x_centre + y] = colour
+        circle_array[y_centre + x, x_centre - y] = colour
+        circle_array[y_centre - x, x_centre - y] = colour
+         
+        x += 1
         if p <= 0:
-            p = p + 2 * y + 1
+            p = p + 2 * x + 1
         else:
-            x -= 1
-            p = p + 2 * y - 2 * x + 1
+            y -= 1
+            p = p + 2 * x - 2 * y + 1
     
     return circle_array
 
-def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+#changed the arguments, please edit in jupyter scripts!
+def plot_circle(image, y_centre, x_centre, colour = [255, 255, 0]):
     circle_array = draw_circle(4, y_centre, x_centre, image.shape[0])
     mask = (circle_array == [255, 255, 0]).all(axis=-1)
     try:
@@ -340,7 +338,7 @@ def plot_circle(image, radius, y_centre, x_centre, background_dim, colour = [255
         return None
     
     # Set the pixels in the mask to be yellow
-    image_3d[mask] = [255, 255, 0]
+    image_3d[mask] = colour
     # Display the modified image
 
     plt.imshow(image_3d)
@@ -357,8 +355,7 @@ def count_circle(radius, y_centre=12, x_centre=12):
     
     return total
 
-
-def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
+def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     for scatter, peaks, label in scatter_data:
@@ -378,61 +375,260 @@ def on_hover(event, fig, ax, scatter_data, image_3d, zoom_size=5,CH1_zoom_axes=[
 
                 ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
                 ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
-                #change y and x of cooresponding peak in other channel as the same index peak in other channel
-                if label == "CH1":
-                    y, x = scatter_data[0][1][idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    zoomed_image = image_3d[y1:y2, x1:x2]
-                    ax_zoom_CH1.clear()
-                    ax_zoom_CH1.imshow(zoomed_image, cmap="gray")
-                    ax_zoom_CH1.set_xticks([])
-                    ax_zoom_CH1.set_yticks([])
-                    ax_zoom_CH1.set_title("")
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y}, {x})")
-                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect1)
-                    ax_zoom_CH2.clear()
-                    y_CH2, x_CH2 = scatter_data[1][1][idx]
-                    x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
-                    y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
-                    zoomed_image_CH2 = image_3d[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
-                    ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
-                    ax_zoom_CH2.set_xticks([])
-                    ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
-                    rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
-                    ax.add_patch(rect2)
-                else:
-                    ax_zoom_CH2.clear()
-                    y, x = scatter_data[1][1][idx]
-                    x1, x2 = max(0, x - zoom_size), min(image_3d.shape[1], x + zoom_size)
-                    y1, y2 = max(0, y - zoom_size), min(image_3d.shape[0], y + zoom_size)
-                    zoomed_image = image_3d[y1:y2, x1:x2]
-                    ax_zoom_CH2.imshow(zoomed_image, cmap="gray")
-                    ax_zoom_CH2.set_xticks([])
-                    ax_zoom_CH2.set_yticks([])
-                    ax_zoom_CH2.set_title(f"Zoomed In ({y}, {x})")
-                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none')
-                    ax.add_patch(rect2)
 
-                    ax_zoom_CH1.clear()
-                    y_CH1, x_CH1 = scatter_data[0][1][idx]
-                    x1_CH1, x2_CH1 = max(0, x_CH1- zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
-                    y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
-                    zoomed_image_CH1 = image_3d[y1_CH1:y2_CH1, x1:x2_CH1]
-                    ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
-                    ax_zoom_CH1.set_xticks([])
-                    ax_zoom_CH1.set_yticks([])
-                    ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH1})")
-                    rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
-                    ax.add_patch(rect1)
+                y_CH1, x_CH1 = scatter_data[0][1][idx]
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                y_CH2, x_CH2 = scatter_data[1][1][idx]
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+
+                zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
+                zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
+
+                ax_zoom_CH1.clear()
+                ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
+                ax_zoom_CH1.set_xticks([])
+                ax_zoom_CH1.set_yticks([])
+                ax_zoom_CH1.set_title("")
+                ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH2})")
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
+                ax.add_patch(rect1)
+                ax_zoom_CH2.clear()
+            
+                
+                ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
+                ax_zoom_CH2.set_xticks([])
+                ax_zoom_CH2.set_yticks([])
+                ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
+                ax.add_patch(rect2)
+                
 
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
 
-def count_circle(radius, y_centre, x_centre):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, image_orig, mask, radius=4, tpf=1/50, R_0=56, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
+    """ Checks if the mouse hovers over a point and updates annotation """
+    visible = False
+    zoom_size=6
+    for scatter, peaks, label in scatter_data:
+        cont, ind = scatter.contains(event)
+        if cont:
+            update_annot(ind, scatter, peaks, label)
+            visible = True
+            idx = ind['ind'][0]
+
+            if event.name == "button_press_event":
+                Frames_data = read_pma(pma_file_path)
+
+                for patch in ax.patches:
+                    patch.remove()
+                    
+                for ax_zoom in fig.axes:
+                    if ax_zoom is not ax:  # Keep the main axis
+                        fig.delaxes(ax_zoom)
+
+                ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
+                ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
+
+                ax_intensity_CH1= fig.add_axes(Intense_axes_CH1)
+                ax_intensity_CH2= fig.add_axes(Intense_axes_CH2)
+                ax_FRET = fig.add_axes(FRET_axes)
+                ax_dist = fig.add_axes(dist_axes)
+
+                y_CH1, x_CH1 = scatter_data[0][1][idx]
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
+                y_CH2, x_CH2 = scatter_data[1][1][idx]
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
+
+                zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
+                zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
+                
+                ax_zoom_CH1.clear()
+                ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
+                ax_zoom_CH1.set_xticks([])
+                ax_zoom_CH1.set_yticks([])
+                ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH1})")
+                ax_zoom_CH2.clear()
+                ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
+                ax_zoom_CH2.set_xticks([])
+                ax_zoom_CH2.set_yticks([])
+                ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
+
+                tot_intensity_all_frames_CH1 = []
+                tot_intensity_all_frames_CH2 = []
+
+                for i in range(len(Frames_data)):
+
+                    # transforms from 2D to 3D
+                    if Frames_data[i].ndim == 2:
+                        frame_data_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
+                    elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
+                        frame_data_3d = Frames_data[i]
+
+                    frame_data_copy = frame_data_3d.copy()
+                    frame_data_copy[mask] = [255, 255, 0]
+
+                    total_intensity_CH1,_ = intensity_in_circle(frame_data_3d, radius, y_CH1, x_CH1)
+                    total_intensity_CH2,_ = intensity_in_circle(frame_data_3d, radius, y_CH2, x_CH2)
+                    tot_intensity_all_frames_CH1.append(total_intensity_CH1)
+                    tot_intensity_all_frames_CH2.append(total_intensity_CH2)
+                
+                time= np.linspace(0, (len(tot_intensity_all_frames_CH1) - 1) * tpf, len(tot_intensity_all_frames_CH1))
+
+                ax_intensity_CH1.clear()
+                ax_intensity_CH1.plot(time, tot_intensity_all_frames_CH1, color='g', label='CH2')
+                ax_intensity_CH1.set_title(f"Intensity v Time in Donor Peak {idx}")
+                ax_intensity_CH1.set_xlabel('Time (s)')
+                ax_intensity_CH1.set_ylabel('Intensity')
+                ax_intensity_CH1.set_ylim(-255, max(tot_intensity_all_frames_CH1)+255)
+                ax_intensity_CH1.grid()
+
+                ax_intensity_CH2.clear()
+                ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='b', label='CH2')
+                ax_intensity_CH2.set_title(f"Intensity v Time in Acceptor Peak {idx}")
+                ax_intensity_CH2.set_xlabel('Time (s)')
+                ax_intensity_CH2.set_ylabel('Intensity')
+                ax_intensity_CH2.set_ylim(-255, max(tot_intensity_all_frames_CH2)+255)
+                ax_intensity_CH2.grid()
+
+                FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
+                ax_FRET.clear()               
+                ax_FRET.plot(time, FRET_values, color='r')
+                ax_FRET.set_title(f"FRET v Time in Pair {idx}")
+                ax_FRET.set_xlabel('Time (s)')
+                ax_FRET.set_ylabel('FRET Efficiency')
+                ax_FRET.grid()
+
+                dist_values = calc_distance(FRET_values, R_0)
+                ax_dist.clear()
+                ax_dist.plot(time, dist_values, color='y')
+                ax_dist.set_title(f"Distance v Time in Pair {idx}")
+                ax_dist.set_xlabel('Time (s)')
+                ax_dist.set_ylabel('Distance')
+                ax_dist.grid()
+
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
+                ax.add_patch(rect1)
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
+                ax.add_patch(rect2)
+
+    annot.set_visible(visible)
+    fig.canvas.draw_idle()
+
+
+def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
+    """ Checks if the mouse hovers over a point and updates annotation """
+    visible = False
+    zoom_size=6
+    for scatter, peaks, label in scatter_data:
+        cont, ind = scatter.contains(event)
+        if cont:
+            update_annot(ind, scatter, peaks, label)
+            visible = True
+            idx = ind['ind'][0]
+
+            if event.name == "button_press_event":
+                Frames_data = read_pma(pma_file_path)
+
+                for patch in ax.patches:
+                    patch.remove()
+                    
+                for ax_zoom in fig.axes:
+                    if ax_zoom is not ax:  # Keep the main axis
+                        fig.delaxes(ax_zoom)
+
+                ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
+                ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
+
+                ax_intensity= fig.add_axes(Intense_axes)
+                ax_FRET = fig.add_axes(FRET_axes)
+                ax_dist = fig.add_axes(dist_axes)
+
+                y_CH1, x_CH1 = scatter_data[0][1][idx]
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                y_CH2, x_CH2 = scatter_data[1][1][idx]
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+
+                zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
+                zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
+                
+                ax_zoom_CH1.clear()
+                ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
+                ax_zoom_CH1.set_xticks([])
+                ax_zoom_CH1.set_yticks([])
+                ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH1})")
+                ax_zoom_CH2.clear()
+                ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
+                ax_zoom_CH2.set_xticks([])
+                ax_zoom_CH2.set_yticks([])
+                ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
+
+                tot_intensity_all_frames_CH1 = []
+                tot_intensity_all_frames_CH2 = []
+
+                for i in range(len(Frames_data)): #for i in range(795): i= 0, 1, 2,..., 794
+
+                    # transforms from 2D to 3D
+                    if Frames_data[i].ndim == 2:
+                        frame_data_3d = np.repeat(Frames_data[i][..., np.newaxis], 3, -1)
+                    elif Frames_data[i].ndim==3 and Frames_data[i].shape[2]==3:
+                        frame_data_3d = Frames_data[i]
+
+                    frame_data_copy = frame_data_3d.copy()
+                    frame_data_copy[mask] = [255, 255, 0]
+
+                    total_intensity_CH1,_ = intensity_in_circle(frame_data_3d, radius, y_CH1, x_CH1)
+                    total_intensity_CH2,_ = intensity_in_circle(frame_data_3d, radius, y_CH2, x_CH2)
+                    tot_intensity_all_frames_CH1.append(total_intensity_CH1)
+                    tot_intensity_all_frames_CH2.append(total_intensity_CH2)
+
+                time= np.linspace(0, (len(tot_intensity_all_frames_CH1) - 1) * tpf, len(tot_intensity_all_frames_CH1))
+                ax_intensity.clear()
+                ax_intensity.plot(time, tot_intensity_all_frames_CH1, color='g', label='CH1')
+                ax_intensity.plot(time, tot_intensity_all_frames_CH2, color='b', label='CH2')
+                ax_intensity.set_title(f"Intensity v Time in Peak {idx}")
+                ax_intensity.set_xlabel('Time (s)')
+                ax_intensity.set_ylabel('Intensity')
+                ax_intensity.set_ylim(-255, max(max(tot_intensity_all_frames_CH1), max(tot_intensity_all_frames_CH2))+255)
+                ax_intensity.legend(bbox_to_anchor=(1.0, 1.22), loc='upper right')
+                ax_intensity.grid()
+                ax_intensity.set_xlim(0, time[-1])
+
+                FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
+                ax_FRET.clear()               
+                ax_FRET.plot(time, FRET_values, color='r')
+                ax_FRET.set_title(f"FRET v Time in Pair {idx}")
+                ax_FRET.set_xlabel('Time (s)')
+                ax_FRET.set_ylabel('FRET Efficiency')
+                ax_FRET.set_xlim(0, time[-1])
+                ax_FRET.grid()
+
+                dist_values = calc_distance(FRET_values, R_0)
+                ax_dist.clear()
+                ax_dist.plot(time, dist_values, color='y')
+                ax_dist.set_title(f"Distance v Time in Pair {idx}")
+                ax_dist.set_xlabel('Time (s)')
+                ax_dist.set_ylabel('Distance')
+                ax_dist.set_xlim(0, time[-1])
+                ax_dist.grid()
+            
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
+                ax.add_patch(rect1)
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
+                ax.add_patch(rect2)
+
+    annot.set_visible(visible)
+    fig.canvas.draw_idle()
+
+
+def count_circle(radius, y_centre=15, x_centre=15):
     # x = radius
     # y = 0
     total = 0
@@ -445,8 +641,6 @@ def count_circle(radius, y_centre, x_centre):
     return total
 
 def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
-    # x = radius
-    # y = 0
 
     intensity_arr_all_peaks = []
     total_arr = []
@@ -457,26 +651,23 @@ def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
         for i in range(x_centre - radius, x_centre+ radius + 1):
             for j in range(y_centre - radius, y_centre + radius + 1):
                 if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
-                    intensity_arr_all_peaks.append(input_array[i][j][0])
-                    total += int(input_array[i][j][0])
+                    intensity_arr_all_peaks.append(input_array[j][i][2])
+                    total += int(input_array[j][i][2])
         total_arr.append(total)
 
     return intensity_arr_all_peaks, total_arr
 
 def intensity_in_circle(input_array, radius, y_centre, x_centre):
-    # x = radius
-    # y = 0
     total_intensity = 0
     intensity_arr = []
     #filling in the circle
     for i in range(x_centre - radius, x_centre + radius + 1):
         for j in range(y_centre - radius, y_centre + radius + 1):
             if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
-                intensity_arr.append(int(input_array[i][j][0]))
-                total_intensity += int(input_array[i][j][0])
+                intensity_arr.append(int(input_array[j][i][2]))
+                total_intensity += int(input_array[j][i][2])
 
     return total_intensity, intensity_arr
-
 
 def calc_FRET(I_D_list, I_A_list):
     I_D, I_A = np.array(I_D_list), np.array(I_A_list)
@@ -486,3 +677,27 @@ def calc_FRET(I_D_list, I_A_list):
 def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
+
+def static_global_background(input_array, radius, y_centre_arr, x_centre_arr):
+    all_peaks_intensity = 0
+    pixel_count = 0
+    #filling in the circle
+    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+        for i in range(x_centre - radius, x_centre+ radius + 1):
+            for j in range(y_centre - radius, y_centre + radius + 1):
+                if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
+                    all_peaks_intensity += int(input_array[i][j][0])
+                    pixel_count += 1
+    
+    # by summing the third column of the array we exclude the yellow pixels from being included!
+    total_intensity = np.sum(input_array[:, :,2])
+
+    
+    num_of_peaks = len(y_centre_arr)
+    num_of_peak_pixels = count_circle(radius) * num_of_peaks
+    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
+
+    #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
+    avg_peak_intensity = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
+
+    return avg_peak_intensity
