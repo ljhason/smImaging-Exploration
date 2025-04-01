@@ -678,7 +678,9 @@ def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
 
-def static_global_background(input_array, radius, y_centre_arr, x_centre_arr):
+
+def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+    frames_data = read_pma(pma_file_path) 
     all_peaks_intensity = 0
     pixel_count = 0
     #filling in the circle
@@ -691,13 +693,15 @@ def static_global_background(input_array, radius, y_centre_arr, x_centre_arr):
     
     # by summing the third column of the array we exclude the yellow pixels from being included!
     total_intensity = np.sum(input_array[:, :,2])
-
     
     num_of_peaks = len(y_centre_arr)
     num_of_peak_pixels = count_circle(radius) * num_of_peaks
     num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
 
     #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
-    avg_peak_intensity = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
-
-    return avg_peak_intensity
+    intensity_to_remove = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
+    corrected_frames_data = []
+    for frame in frames_data: #frame is 1D
+        frame = frame - intensity_to_remove
+        corrected_frames_data.append(frame)
+    return corrected_frames_data
