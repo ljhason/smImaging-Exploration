@@ -409,7 +409,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1
     fig.canvas.draw_idle()
 
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, image_orig, mask, radius=4, tpf=1/50, R_0=56, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None",  Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -421,7 +421,13 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
             idx = ind['ind'][0]
 
             if event.name == "button_press_event":
-                Frames_data = read_pma(pma_file_path)
+                if background_treatment == "None":
+                    Frames_data = read_pma(pma_file_path)
+                elif background_treatment == "SG":
+                    Frames_data = static_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                elif background_treatment == "DG":
+                    Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+
 
                 for patch in ax.patches:
                     patch.remove()
@@ -486,6 +492,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
                 ax_intensity_CH1.set_xlabel('Time (s)')
                 ax_intensity_CH1.set_ylabel('Intensity')
                 ax_intensity_CH1.set_ylim(-255, max(tot_intensity_all_frames_CH1)+255)
+                ax_intensity_CH1.set_xlim(0, time[-1])
                 ax_intensity_CH1.grid()
 
                 ax_intensity_CH2.clear()
@@ -494,6 +501,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
                 ax_intensity_CH2.set_xlabel('Time (s)')
                 ax_intensity_CH2.set_ylabel('Intensity')
                 ax_intensity_CH2.set_ylim(-255, max(tot_intensity_all_frames_CH2)+255)
+                ax_intensity_CH2.set_xlim(0, time[-1])
                 ax_intensity_CH2.grid()
 
                 FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
@@ -502,6 +510,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
                 ax_FRET.set_title(f"FRET v Time in Pair {idx}")
                 ax_FRET.set_xlabel('Time (s)')
                 ax_FRET.set_ylabel('FRET Efficiency')
+                ax_FRET.set_xlim(0, time[-1])
                 ax_FRET.grid()
 
                 dist_values = calc_distance(FRET_values, R_0)
@@ -510,6 +519,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
                 ax_dist.set_title(f"Distance v Time in Pair {idx}")
                 ax_dist.set_xlabel('Time (s)')
                 ax_dist.set_ylabel('Distance')
+                ax_dist.set_xlim(0, time[-1])
                 ax_dist.grid()
 
                 rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
@@ -521,7 +531,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
     fig.canvas.draw_idle()
 
 
-def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
+def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None",  Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -533,7 +543,12 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, image
             idx = ind['ind'][0]
 
             if event.name == "button_press_event":
-                Frames_data = read_pma(pma_file_path)
+                if background_treatment == "None":
+                    Frames_data = read_pma(pma_file_path)
+                elif background_treatment == "SG":
+                    Frames_data = static_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                elif background_treatment == "DG":
+                    Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
 
                 for patch in ax.patches:
                     patch.remove()
@@ -678,7 +693,6 @@ def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
 
-
 def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
     frames_data = read_pma(pma_file_path) 
     all_peaks_intensity = 0
@@ -691,15 +705,42 @@ def static_global_background_subtraction(pma_file_path, input_array, radius, y_c
     
     # by summing the third column of the array we exclude the yellow pixels from being included!
     total_intensity = np.sum(input_array[:, :,2])
+
     
     num_of_peaks = len(y_centre_arr)
     num_of_peak_pixels = count_circle(radius) * num_of_peaks
     num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
 
     #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
-    intensity_to_remove = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
+    intensity_to_remove = ((total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels))
     corrected_frames_data = []
     for frame in frames_data: #frame is 1D
-        frame = frame - intensity_to_remove
+        frame = frame.astype(np.int16)
+        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
         corrected_frames_data.append(frame)
+    return corrected_frames_data
+
+def dynamic_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+    frames_data = read_pma(pma_file_path) 
+    all_peaks_intensity = 0
+    corrected_frames_data = []
+    num_of_peaks = len(y_centre_arr)
+    num_of_peak_pixels = count_circle(radius) * num_of_peaks
+    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
+    #filling in the circle
+    for frame in frames_data: #frame is 1D
+        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+            for i in range(x_centre - radius, x_centre+ radius + 1):
+                for j in range(y_centre - radius, y_centre + radius + 1):
+                    if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
+                        all_peaks_intensity += int(input_array[i][j][0])
+        
+        # by summing the third column of the array we exclude the yellow pixels from being included!
+        total_intensity = np.sum(input_array[:, :,2])
+        #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
+        intensity_to_remove = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
+        frame = frame.astype(np.int16)
+        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
+        corrected_frames_data.append(frame)
+
     return corrected_frames_data
