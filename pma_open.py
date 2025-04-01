@@ -682,14 +682,12 @@ def calc_distance(FRET_list, R_0):
 def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
     frames_data = read_pma(pma_file_path) 
     all_peaks_intensity = 0
-    pixel_count = 0
     #filling in the circle
     for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
         for i in range(x_centre - radius, x_centre+ radius + 1):
             for j in range(y_centre - radius, y_centre + radius + 1):
                 if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
                     all_peaks_intensity += int(input_array[i][j][0])
-                    pixel_count += 1
     
     # by summing the third column of the array we exclude the yellow pixels from being included!
     total_intensity = np.sum(input_array[:, :,2])
