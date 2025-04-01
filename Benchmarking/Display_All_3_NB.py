@@ -67,7 +67,7 @@ scatter_data = [(scat1, poly_pair_arr_CH1_tol4_10_curr , "CH1"), (scat2, poly_pa
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), tpf=1/50, background_treatment = "SG"))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image,  mask = (circle_array_new == [255, 255, 0]).all(axis=-1), tpf=1/50, background_treatment = "SG"))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/50))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image,  mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/50))
 
 plt.show()

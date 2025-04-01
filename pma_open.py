@@ -3,16 +3,19 @@ import os
 import numpy as np
 import struct
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import cv2
-from scipy.ndimage import maximum_filter, label
-from skimage import io, feature, draw
-from skimage import color
+from skimage import io
 from PIL import Image
-from skimage.util.shape import view_as_blocks
 from skimage.feature import peak_local_max
-from matplotlib.widgets import Cursor, Button
 from matplotlib import patches
+from matplotlib.ticker import MultipleLocator
+
+# from matplotlib.widgets import Cursor, Button
+# from skimage.util.shape import view_as_blocks
+# from scipy.ndimage import maximum_filter, label
+
+# from skimage import color
+# import matplotlib.image as mpimg
 
 def read_pma_f0(pma_file_path):
     try:
@@ -325,8 +328,8 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
     return circle_array
 
 #changed the arguments, please edit in jupyter scripts!
-def plot_circle(image, y_centre, x_centre, colour = [255, 255, 0]):
-    circle_array = draw_circle(4, y_centre, x_centre, image.shape[0])
+def plot_circle(image, y_centre, x_centre, radius=4, colour = [255, 255, 0]):
+    circle_array = draw_circle(radius, y_centre, x_centre, image.shape[0])
     mask = (circle_array == [255, 255, 0]).all(axis=-1)
     try:
         if image.ndim == 2:
@@ -344,7 +347,6 @@ def plot_circle(image, y_centre, x_centre, colour = [255, 255, 0]):
     plt.imshow(image_3d)
     plt.show()
 
-#counts the pixels within the circle (should have 45 if the radius is 4)
 def count_circle(radius, y_centre=12, x_centre=12):
     total = 0
     #filling in the circle
@@ -354,6 +356,65 @@ def count_circle(radius, y_centre=12, x_centre=12):
                 total +=1
     
     return total
+
+
+
+def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+    frames_data = read_pma(pma_file_path) 
+    
+    all_peaks_intensity = 0
+    height, width, _ = input_array.shape
+    y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
+    filled_circle_mask = np.zeros((height, width), dtype=bool)
+
+    # by summing the third column of the array we exclude the yellow pixels from being included!
+    total_intensity = np.sum(input_array[:, :,2])
+    num_of_peaks = len(y_centre_arr)
+    num_of_peak_pixels = count_circle(radius) * num_of_peaks
+    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
+    corrected_frames_data = []
+
+    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+        mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+        filled_circle_mask|= mask
+        
+    all_peaks_intensity += np.sum(input_array[filled_circle_mask, 2])
+    intensity_to_remove = ((total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels))
+    
+    for frame in frames_data: #frame is 1D
+        frame = frame.astype(np.int16)
+        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
+        corrected_frames_data.append(frame)
+
+    return corrected_frames_data
+
+def dynamic_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+    
+    frames_data = read_pma(pma_file_path)
+    height, width, _ = input_array.shape
+    y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
+    filled_circle_mask = np.zeros((height, width), dtype=bool)
+
+    corrected_frames_data = []
+    num_of_peaks = len(y_centre_arr)
+    num_of_peak_pixels = count_circle(radius) * num_of_peaks
+    num_of_frame_pixels = height * width
+
+    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+        mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+        filled_circle_mask|= mask
+
+    for frame in frames_data:  
+        all_peaks_intensity = np.sum(frame[filled_circle_mask])
+        total_intensity = np.sum(frame)
+        intensity_to_remove = np.int16((total_intensity - all_peaks_intensity) // (num_of_frame_pixels - num_of_peak_pixels))
+        frame = frame.astype(np.int16) 
+        frame -= intensity_to_remove 
+        frame = np.clip(frame, 0, 255).astype(np.uint8)  # Clip and convert back
+        corrected_frames_data.append(frame)
+
+    return corrected_frames_data
+
 
 def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
     """ Checks if the mouse hovers over a point and updates annotation """
@@ -494,6 +555,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_intensity_CH1.set_ylim(-255, max(tot_intensity_all_frames_CH1)+255)
                 ax_intensity_CH1.set_xlim(0, time[-1])
                 ax_intensity_CH1.grid()
+                ax_intensity_CH1.xaxis.set_major_locator(MultipleLocator(1))  # 1-second intervals for x-axis
+                ax_intensity_CH1.yaxis.set_major_locator(MultipleLocator(500))  # 500-unit intervals for y-axis
 
                 ax_intensity_CH2.clear()
                 ax_intensity_CH2.plot(time, tot_intensity_all_frames_CH2, color='b', label='CH2')
@@ -503,6 +566,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_intensity_CH2.set_ylim(-255, max(tot_intensity_all_frames_CH2)+255)
                 ax_intensity_CH2.set_xlim(0, time[-1])
                 ax_intensity_CH2.grid()
+                ax_intensity_CH2.xaxis.set_major_locator(MultipleLocator(1))  # 1-second intervals for x-axis
+                ax_intensity_CH2.yaxis.set_major_locator(MultipleLocator(500))  # 500-unit intervals for y-axis
 
                 FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                 ax_FRET.clear()               
@@ -512,6 +577,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_FRET.set_ylabel('FRET Efficiency')
                 ax_FRET.set_xlim(0, time[-1])
                 ax_FRET.grid()
+                ax_FRET.xaxis.set_major_locator(MultipleLocator(1))  # 1-second intervals for x-axis
+
 
                 dist_values = calc_distance(FRET_values, R_0)
                 ax_dist.clear()
@@ -521,6 +588,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_dist.set_ylabel('Distance')
                 ax_dist.set_xlim(0, time[-1])
                 ax_dist.grid()
+                ax_dist.xaxis.set_major_locator(MultipleLocator(1))  # 1-second intervals for x-axis
+
 
                 rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
                 ax.add_patch(rect1)
@@ -549,6 +618,8 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                     Frames_data = static_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
                 elif background_treatment == "DG":
                     Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                else:
+                    Frames_data = read_pma(pma_file_path)
 
                 for patch in ax.patches:
                     patch.remove()
@@ -615,6 +686,8 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 ax_intensity.legend(bbox_to_anchor=(1.0, 1.22), loc='upper right')
                 ax_intensity.grid()
                 ax_intensity.set_xlim(0, time[-1])
+                ax_intensity.xaxis.set_major_locator(MultipleLocator(1)) 
+                ax_intensity.yaxis.set_major_locator(MultipleLocator(500))  
 
                 FRET_values = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                 ax_FRET.clear()               
@@ -624,6 +697,8 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 ax_FRET.set_ylabel('FRET Efficiency')
                 ax_FRET.set_xlim(0, time[-1])
                 ax_FRET.grid()
+                ax_FRET.xaxis.set_major_locator(MultipleLocator(1)) 
+
 
                 dist_values = calc_distance(FRET_values, R_0)
                 ax_dist.clear()
@@ -633,6 +708,7 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 ax_dist.set_ylabel('Distance')
                 ax_dist.set_xlim(0, time[-1])
                 ax_dist.grid()
+                ax_dist.xaxis.set_major_locator(MultipleLocator(1))
             
                 rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
                 ax.add_patch(rect1)
@@ -692,55 +768,3 @@ def calc_FRET(I_D_list, I_A_list):
 def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
-
-def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
-    frames_data = read_pma(pma_file_path) 
-    all_peaks_intensity = 0
-    #filling in the circle
-    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
-        for i in range(x_centre - radius, x_centre+ radius + 1):
-            for j in range(y_centre - radius, y_centre + radius + 1):
-                if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
-                    all_peaks_intensity += int(input_array[i][j][0])
-    
-    # by summing the third column of the array we exclude the yellow pixels from being included!
-    total_intensity = np.sum(input_array[:, :,2])
-
-    
-    num_of_peaks = len(y_centre_arr)
-    num_of_peak_pixels = count_circle(radius) * num_of_peaks
-    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
-
-    #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
-    intensity_to_remove = ((total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels))
-    corrected_frames_data = []
-    for frame in frames_data: #frame is 1D
-        frame = frame.astype(np.int16)
-        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
-        corrected_frames_data.append(frame)
-    return corrected_frames_data
-
-def dynamic_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
-    frames_data = read_pma(pma_file_path) 
-    all_peaks_intensity = 0
-    corrected_frames_data = []
-    num_of_peaks = len(y_centre_arr)
-    num_of_peak_pixels = count_circle(radius) * num_of_peaks
-    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
-    #filling in the circle
-    for frame in frames_data: #frame is 1D
-        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
-            for i in range(x_centre - radius, x_centre+ radius + 1):
-                for j in range(y_centre - radius, y_centre + radius + 1):
-                    if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
-                        all_peaks_intensity += int(input_array[i][j][0])
-        
-        # by summing the third column of the array we exclude the yellow pixels from being included!
-        total_intensity = np.sum(input_array[:, :,2])
-        #avg_peak_intensity gives the avg intensity of the pixels that are not within the yellow circle
-        intensity_to_remove = (total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels)
-        frame = frame.astype(np.int16)
-        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
-        corrected_frames_data.append(frame)
-
-    return corrected_frames_data
