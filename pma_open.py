@@ -525,7 +525,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1
     fig.canvas.draw_idle()
 
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None", CH_consideration=False, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=6, background_treatment = "None", CH_consideration=False, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -542,7 +542,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 elif background_treatment == "SG":
                     Frames_data = SG_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr, CH_consideration=CH_consideration)
                 elif background_treatment == "DG":
-                    Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                    Frames_data = DG_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr, CH_consideration=CH_consideration)
 
 
                 for patch in ax.patches:
@@ -561,11 +561,11 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_dist = fig.add_axes(dist_axes)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -640,7 +640,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_dist.plot(time, dist_values, color='y')
                 ax_dist.set_title(f"Distance v Time in Pair {idx}")
                 ax_dist.set_xlabel('Time (s)')
-                ax_dist.set_ylabel('Distance')
+                ax_dist.set_ylabel('Distance (nm)')
                 ax_dist.set_xlim(0, time[-1])
                 ax_dist.grid()
                 ax_dist.xaxis.set_major_locator(MultipleLocator(1))  # 1-second intervals for x-axis
@@ -655,7 +655,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
     fig.canvas.draw_idle()
 
 
-def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None",  Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
+def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=6, background_treatment = "None", CH_consideration=False, Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -670,9 +670,9 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 if background_treatment == "None":
                     Frames_data = read_pma(pma_file_path)
                 elif background_treatment == "SG":
-                    Frames_data = static_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                    Frames_data = SG_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr, CH_consideration=CH_consideration)
                 elif background_treatment == "DG":
-                    Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                    Frames_data = DG_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr, CH_consideration=CH_consideration)
                 else:
                     Frames_data = read_pma(pma_file_path)
 
@@ -760,7 +760,7 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 ax_dist.plot(time, dist_values, color='y')
                 ax_dist.set_title(f"Distance v Time in Pair {idx}")
                 ax_dist.set_xlabel('Time (s)')
-                ax_dist.set_ylabel('Distance')
+                ax_dist.set_ylabel('Distance (nm)')
                 ax_dist.set_xlim(0, time[-1])
                 ax_dist.grid()
                 ax_dist.xaxis.set_major_locator(MultipleLocator(1))
