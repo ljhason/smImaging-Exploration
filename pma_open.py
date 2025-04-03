@@ -357,62 +357,117 @@ def count_circle(radius, y_centre=12, x_centre=12):
     
     return total
 
-
-
-def static_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+def SG_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr, CH_consideration=False):
     frames_data = read_pma(pma_file_path) 
-    
-    all_peaks_intensity = 0
     height, width, _ = input_array.shape
     y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
     filled_circle_mask = np.zeros((height, width), dtype=bool)
 
-    # by summing the third column of the array we exclude the yellow pixels from being included!
-    total_intensity = np.sum(input_array[:, :,2])
-    num_of_peaks = len(y_centre_arr)
-    num_of_peak_pixels = count_circle(radius) * num_of_peaks
-    num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]
-    corrected_frames_data = []
+    if not CH_consideration:
+        all_peaks_intensity = 0
+        total_intensity = np.sum(input_array[:, :,2])
+        num_of_peaks = len(y_centre_arr)
+        num_of_frame_pixels = height * width
 
-    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
-        mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
-        filled_circle_mask|= mask
+        num_of_peak_pixels = count_circle(radius) * num_of_peaks #each channel
+        corrected_frames_data = []
+
+        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+            mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+            filled_circle_mask|= mask
         
-    all_peaks_intensity += np.sum(input_array[filled_circle_mask, 2])
-    intensity_to_remove = ((total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels))
+        all_peaks_intensity += np.sum(input_array[filled_circle_mask, 2])
+        intensity_to_remove = ((total_intensity-all_peaks_intensity) // (num_of_frame_pixels-num_of_peak_pixels))
+        for frame in frames_data: #frame is 1D
+            frame = frame.astype(np.int16)
+            frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
+            corrected_frames_data.append(frame)
+
+    else: 
+        all_peaks_intensity_CH1 = 0
+        all_peaks_intensity_CH2 = 0
+
+        total_intensity_CH1 = np.sum(input_array[:, :width//2,2])
+        total_intensity_CH2 = np.sum(input_array[:, width//2:,2])
+        num_of_peaks = len(y_centre_arr)//2 #this is in each channel
+        num_of_frame_pixels = height*width//2
+
+        num_of_peak_pixels = count_circle(radius) * num_of_peaks #each channel
+        corrected_frames_data = []
+
+        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+            mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+            filled_circle_mask|= mask
+
+        # split the filled_circle_mask into two channels
+        filled_circle_mask_CH1 = filled_circle_mask[:, :width//2]
+        filled_circle_mask_CH2 = filled_circle_mask[:, width//2:]
+            
+        all_peaks_intensity_CH1 += np.sum(input_array[:, :width//2, 2][filled_circle_mask_CH1])
+        all_peaks_intensity_CH2 += np.sum(input_array[:, width//2:, 2][filled_circle_mask_CH2])
+
+        intensity_to_remove_CH1 = ((total_intensity_CH1-all_peaks_intensity_CH1) // (num_of_frame_pixels-num_of_peak_pixels)).astype(np.int16)
+        intensity_to_remove_CH2 = ((total_intensity_CH2-all_peaks_intensity_CH2) // (num_of_frame_pixels-num_of_peak_pixels)).astype(np.int16)
     
-    for frame in frames_data: #frame is 1D
-        frame = frame.astype(np.int16)
-        frame = np.clip(frame - intensity_to_remove, 0, 255).astype(np.uint8)
-        corrected_frames_data.append(frame)
+        for frame in frames_data: #frame is 1D
+            frame = frame.astype(np.int16)
+            frame_CH1 = np.clip(frame[:,:width//2] - intensity_to_remove_CH1, 0, 255).astype(np.uint8)
+            frame_CH2 = np.clip(frame[:,width//2:] - intensity_to_remove_CH2, 0, 255).astype(np.uint8)
+            frame = np.concatenate((frame_CH1, frame_CH2), axis=1)
+            corrected_frames_data.append(frame)
 
     return corrected_frames_data
 
-def dynamic_global_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr):
+def DG_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr, CH_consideration=False):
     
     frames_data = read_pma(pma_file_path)
     height, width, _ = input_array.shape
     y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
     filled_circle_mask = np.zeros((height, width), dtype=bool)
-
     corrected_frames_data = []
-    num_of_peaks = len(y_centre_arr)
-    num_of_peak_pixels = count_circle(radius) * num_of_peaks
-    num_of_frame_pixels = height * width
 
-    for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
-        mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
-        filled_circle_mask|= mask
+    if not CH_consideration:
+        num_of_peaks = len(y_centre_arr)
+        num_of_peak_pixels = count_circle(radius) * num_of_peaks
+        num_of_frame_pixels = height * width
 
-    for frame in frames_data:  
-        all_peaks_intensity = np.sum(frame[filled_circle_mask])
-        total_intensity = np.sum(frame)
-        intensity_to_remove = np.int16((total_intensity - all_peaks_intensity) // (num_of_frame_pixels - num_of_peak_pixels))
-        frame = frame.astype(np.int16) 
-        frame -= intensity_to_remove 
-        frame = np.clip(frame, 0, 255).astype(np.uint8)  # Clip and convert back
-        corrected_frames_data.append(frame)
+        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+            mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+            filled_circle_mask |= mask
+        
+        for frame in frames_data:  
+            all_peaks_intensity = np.sum(frame[filled_circle_mask])
+            total_intensity = np.sum(frame)
+            intensity_to_remove = np.int16((total_intensity - all_peaks_intensity) // (num_of_frame_pixels - num_of_peak_pixels))
+            frame = frame.astype(np.int16) 
+            frame -= intensity_to_remove 
+            frame = np.clip(frame, 0, 255).astype(np.uint8)  # Clip and convert back
+            corrected_frames_data.append(frame)
 
+    else: 
+        num_of_peaks = len(y_centre_arr)//2 #this is in each channel
+        num_of_peak_pixels = count_circle(radius) * num_of_peaks
+        num_of_frame_pixels = input_array.shape[0] * input_array.shape[1]//2
+
+        for y_centre, x_centre in zip(y_centre_arr, x_centre_arr):
+            mask = (x_indices - x_centre) ** 2 + (y_indices - y_centre) ** 2 < radius ** 2
+            filled_circle_mask |= mask
+        
+        filled_circle_mask_CH1 = filled_circle_mask[:, :width//2]
+        filled_circle_mask_CH2 = filled_circle_mask[:, width//2:]
+        
+        for frame in frames_data:
+            all_peaks_intensity_CH1= np.sum(frame[:, :width//2][filled_circle_mask_CH1])
+            all_peaks_intensity_CH2= np.sum(frame[:, width//2:][filled_circle_mask_CH2])
+            total_intensity_CH1 = np.sum(frame[:, : width//2])
+            total_intensity_CH2 = np.sum(frame[:, width//2:])
+            intensity_to_remove_CH1 = np.int16((total_intensity_CH1 - all_peaks_intensity_CH1) // (num_of_frame_pixels - num_of_peak_pixels)).astype(np.int16)
+            intensity_to_remove_CH2 = np.int16((total_intensity_CH2 - all_peaks_intensity_CH2) // (num_of_frame_pixels - num_of_peak_pixels)).astype(np.int16)
+            frame.astype(np.int16)
+            frame_CH1 = np.clip(frame[:,:width//2] - intensity_to_remove_CH1, 0, 255).astype(np.uint8)
+            frame_CH2 = np.clip(frame[:,width//2:] - intensity_to_remove_CH2, 0, 255).astype(np.uint8)
+            frame = np.concatenate((frame_CH1, frame_CH2), axis=1)
+            corrected_frames_data.append(frame)
     return corrected_frames_data
 
 
@@ -470,7 +525,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1
     fig.canvas.draw_idle()
 
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None",  Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=56, background_treatment = "None", CH_consideration=False, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -485,7 +540,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 if background_treatment == "None":
                     Frames_data = read_pma(pma_file_path)
                 elif background_treatment == "SG":
-                    Frames_data = static_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
+                    Frames_data = SG_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr, CH_consideration=CH_consideration)
                 elif background_treatment == "DG":
                     Frames_data = dynamic_global_background_subtraction(pma_file_path, image_3d, radius, y_centre_arr, x_centre_arr)
 
