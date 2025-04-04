@@ -10,13 +10,6 @@ from skimage.feature import peak_local_max
 from matplotlib import patches
 from matplotlib.ticker import MultipleLocator
 
-# from matplotlib.widgets import Cursor, Button
-# from skimage.util.shape import view_as_blocks
-# from scipy.ndimage import maximum_filter, label
-
-# from skimage import color
-# import matplotlib.image as mpimg
-
 def read_pma_f0(pma_file_path):
     try:
         with open(pma_file_path, "rb") as f:
@@ -27,8 +20,6 @@ def read_pma_f0(pma_file_path):
             
             #Calc number of frames
             f.seek(0, 2) #sets pointer to end of file .seek(offset, from_what)
-            filesize = f.tell() #returns current (end) position of pointer
-            # Nframes = (filesize - 4) // (X_pixels * Y_pixels)  #Assuming 4-byte header
             f.seek(0, 4) #Reset file pointer to immediately after 4 byte header
 
             #Read the binary image data
@@ -93,7 +84,7 @@ def generate_mp4(images_path, fps=100):
         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
         frame = cv2.imread(os.path.join(images_path, images[0]))
-        height, width, layers = frame.shape
+        height, width,_ = frame.shape
         video = cv2.VideoWriter(os.path.join(video_file, video_name), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         for image in images:
@@ -107,6 +98,11 @@ def generate_mp4(images_path, fps=100):
     
     except Exception as e:
         print(f"Error generating video: {e}")
+        #delete the directory
+        if os.path.exists(video_file):
+            os.rmdir(video_file)
+        else:
+            print(f"Directory does not exist: {video_file}")
         return None
     
 def avg_frame_arr(pma_file_path):
