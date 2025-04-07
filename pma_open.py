@@ -292,6 +292,7 @@ def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
                     poly_pair_arr_CH1.append(c)
                     poly_pair_arr_CH2.append(coord)
                     break
+
                 
     poly_pair_arr_CH1 = np.array(poly_pair_arr_CH1)
     poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
