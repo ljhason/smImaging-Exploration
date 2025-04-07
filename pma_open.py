@@ -179,7 +179,9 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
     for peak in peaks_coords_IDL:
         y, x = peak
         # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
-        if image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
+        if y < boarder or y > height - boarder or x < boarder or x > width - boarder:
+            large_peaks.append(peak)
+        elif image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
             large_peaks.append(peak)
         else:
             correct_size_peaks.append(peak)
@@ -241,7 +243,7 @@ def find_linear_pairs(peaks_1, peaks_2, tolerance=1, width = 512):
                             linear_pair_arr_CH1.append(coord)
                             linear_pair_arr_CH2.append(c)
                             break
-        elif width == 256:
+        else:
             for coord in gp1_list:
                     for c in gp2_set:
                         if (abs(coord[0] - c[0])) <=tolerance and (abs(coord[1] - c[1]) <= tolerance) and c not in linear_pair_arr_CH2:
