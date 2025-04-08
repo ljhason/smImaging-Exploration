@@ -29,7 +29,7 @@ CH2_peaks_10 = np.array([[60, 322], [18, 453], [183, 304], [119, 431], [276, 323
 
 params_x_man_10, params_y_man_10 = find_polyfit_params(CH1_peaks_10, CH2_peaks_10, degree=3)
 mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_man_10).astype(np.uint16)
-poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
+poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_pairs(good_peaks_1, mapped_peaks_10, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
 y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
@@ -44,7 +44,7 @@ elif image.ndim==3 and image.shape[2]==3:
     image_3d = image
 image_3d[mask_new] = [255, 255, 0]
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, R_0=56, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tpf=1/100, R_0=5.6, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -183,7 +183,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, tp
                     ax_dist.plot(time, dist_values, color='y')
                     ax_dist.set_title(f"Distance v Time in Pair {idx}")
                     ax_dist.set_xlabel('Time (s)')
-                    ax_dist.set_ylabel('Distance')
+                    ax_dist.set_ylabel('Distance (nm)')
 
                     rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none')
                     ax.add_patch(rect2)

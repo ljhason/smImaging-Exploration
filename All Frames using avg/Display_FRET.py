@@ -29,7 +29,7 @@ CH2_peaks_10 = np.array([[60, 322], [18, 453], [183, 304], [119, 431], [276, 323
 
 params_x_man_10, params_y_man_10 = find_polyfit_params(CH1_peaks_10, CH2_peaks_10, degree=3)
 mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_man_10).astype(np.uint16)
-poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
+poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_pairs(good_peaks_1, mapped_peaks_10, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
 y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
@@ -47,7 +47,7 @@ elif image.ndim==3 and image.shape[2]==3:
 image_copy[mask] = [255, 255, 0]
 
 
-def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, image_orig, radius=4, tpf=1/100, Intense_axes_CH1=[0.48, 0.7, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.45, 0.5, 0.15], FRET_axes=[0.48, 0.20, 0.5, 0.15]):
+def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, radius=4, tpf=1/100, Intense_axes_CH1=[0.48, 0.7, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.45, 0.5, 0.15], FRET_axes=[0.48, 0.20, 0.5, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     zoom_size=6
@@ -93,8 +93,8 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, image_3d, im
                         frame_3d = Frames_data[i]
                     frame_3d[mask] = [255, 255, 0]
 
-                    total_intensity_CH1,_ = intensity_in_circle(frame_3d, 4, y_CH1, x_CH1)
-                    total_intensity_CH2,_ = intensity_in_circle(frame_3d, 4, y_CH2, x_CH2)
+                    total_intensity_CH1,_ = intensity_in_circle(frame_3d, radius, y_CH1, x_CH1)
+                    total_intensity_CH2,_ = intensity_in_circle(frame_3d, radius, y_CH2, x_CH2)
                     tot_intensity_all_frames_CH1.append(total_intensity_CH1)
                     tot_intensity_all_frames_CH2.append(total_intensity_CH2)
                 

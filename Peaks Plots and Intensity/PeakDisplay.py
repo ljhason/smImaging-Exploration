@@ -29,7 +29,7 @@ CH2_peaks_10 = np.array([[60, 322], [18, 453], [183, 304], [119, 431], [276, 323
 
 params_x_man_10, params_y_man_10 = find_polyfit_params(CH1_peaks_10, CH2_peaks_10, degree=3)
 mapped_peaks_10 = apply_polyfit_params(good_peaks_1, params_x_man_10, params_y_man_10).astype(np.uint16)
-poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_polyfit_pairs(mapped_peaks_10, good_peaks_1, tolerance=4)
+poly_pair_count_tol4_10, poly_pair_arr_CH1_tol4_10, poly_pair_arr_CH2_tol4_10 = find_pairs(good_peaks_1, mapped_peaks_10, tolerance=4)
 
 # This code is substituted for plot_circle(image, 4, y_centre, x_centre, image.shape[0])
 y_centres = np.concatenate((poly_pair_arr_CH1_tol4_10[:,0], poly_pair_arr_CH2_tol4_10[:,0]))
