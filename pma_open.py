@@ -226,37 +226,40 @@ def print_coords_trigger(event, fig, scatter_data):
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
-def find_linear_pairs(peaks_1, peaks_2, tolerance=1, width = 512):
+def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2):
     # peaks_2 coordinates goes from [0, 512] to [256,512]
     gp1_list = [tuple(peak) for peak in peaks_1]
     gp2_list = [tuple(peak) for peak in peaks_2]
     gp2_set = set(gp2_list)
-    linear_pair_count = 0
-    linear_pair_arr_CH1 = []
-    linear_pair_arr_CH2 = []
+    pair_count = 0
+    pair_arr_CH1 = []
+    pair_arr_CH2 = []
     try: 
-        if width == 512:
+        if Channel_count == 2:
             for coord in gp1_list:
                     for c in gp2_set:
-                        if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in linear_pair_arr_CH2:
-                            linear_pair_count += 1
-                            linear_pair_arr_CH1.append(coord)
-                            linear_pair_arr_CH2.append(c)
+                        if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in pair_arr_CH2:
+                            pair_count += 1
+                            pair_arr_CH1.append(coord)
+                            pair_arr_CH2.append(c)
+                            break
+        elif Channel_count == 1:
+            for coord in gp1_list:
+                    for c in gp2_set:
+                        if (abs(coord[0] - c[0])) <=tolerance and (abs(coord[1] - c[1]) <= tolerance) and c not in pair_arr_CH2:
+                            pair_count += 1
+                            pair_arr_CH1.append(coord)
+                            pair_arr_CH2.append(c)
                             break
         else:
-            for coord in gp1_list:
-                    for c in gp2_set:
-                        if (abs(coord[0] - c[0])) <=tolerance and (abs(coord[1] - c[1]) <= tolerance) and c not in linear_pair_arr_CH2:
-                            linear_pair_count += 1
-                            linear_pair_arr_CH1.append(coord)
-                            linear_pair_arr_CH2.append(c)
-                            break
+            print("Invalid Channel Count, please choose 1 or 2")
+            return None
     except Exception as e:
         print(f"Error finding linear pairs: {e}")
         return None
-    linear_pair_arr_CH1 = np.array(linear_pair_arr_CH1)
-    linear_pair_arr_CH2 = np.array(linear_pair_arr_CH2)
-    return linear_pair_count, linear_pair_arr_CH1, linear_pair_arr_CH2
+    pair_arr_CH1 = np.array(pair_arr_CH1)
+    pair_arr_CH2 = np.array(pair_arr_CH2)
+    return pair_count, pair_arr_CH1, pair_arr_CH2
 
 
 def find_polyfit_params(peaks_1, peaks_2, degree=2):
@@ -274,29 +277,6 @@ def apply_polyfit_params(CH1_peaks, params_x, params_y):
     x_mapped = np.polyval(params_x, x1)  # Apply X transformation
     y_mapped = np.polyval(params_y, y1)  # Apply Y transformation
     return np.column_stack((y_mapped, x_mapped))  # Return transformed points
-
-def find_polyfit_pairs(mapped_peaks, peaks_1, tolerance=1):
-    # we are comparing mapped peaks to CH2 peaks
-    map_list = [tuple(peak) for peak in mapped_peaks]
-    gp1_list = [tuple(peak) for peak in peaks_1]
-    gp1_set = set(gp1_list)
-
-    poly_pair_count = 0
-    poly_pair_arr_CH1 = []
-    poly_pair_arr_CH2 = []
-
-    for coord in map_list:
-            for c in gp1_set:
-                if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in poly_pair_arr_CH1:
-                    poly_pair_count += 1
-                    poly_pair_arr_CH1.append(c)
-                    poly_pair_arr_CH2.append(coord)
-                    break
-
-                
-    poly_pair_arr_CH1 = np.array(poly_pair_arr_CH1)
-    poly_pair_arr_CH2 = np.array(poly_pair_arr_CH2)
-    return poly_pair_count, poly_pair_arr_CH1, poly_pair_arr_CH2
 
 
 # Midpoint circle algorithm 
