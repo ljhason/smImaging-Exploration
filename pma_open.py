@@ -226,12 +226,11 @@ def print_coords_trigger(event, fig, scatter_data):
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
-def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2):
+def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2, shift=[0,0]):
     # peaks_2 coordinates goes from [0, 512] to [256,512]
     gp1_list = [tuple(peak) for peak in peaks_1]
     gp2_list = [tuple(peak) for peak in peaks_2]
     gp2_set = set(gp2_list)
-    pair_count = 0
     pair_arr_CH1 = []
     pair_arr_CH2 = []
     try: 
@@ -239,7 +238,6 @@ def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2):
             for coord in gp1_list:
                     for c in gp2_set:
                         if (abs(coord[0] - c[0])) <=tolerance and (256-tolerance <= abs(coord[1] - c[1]) <= 256+tolerance) and c not in pair_arr_CH2:
-                            pair_count += 1
                             pair_arr_CH1.append(coord)
                             pair_arr_CH2.append(c)
                             break
@@ -247,19 +245,29 @@ def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2):
             for coord in gp1_list:
                     for c in gp2_set:
                         if (abs(coord[0] - c[0])) <=tolerance and (abs(coord[1] - c[1]) <= tolerance) and c not in pair_arr_CH2:
-                            pair_count += 1
                             pair_arr_CH1.append(coord)
                             pair_arr_CH2.append(c)
                             break
         else:
             print("Invalid Channel Count, please choose 1 or 2")
             return None
+
+        if shift == [0, 0]:
+            out_pair_arr_CH1 = np.array(pair_arr_CH1)
+            out_pair_arr_CH2 = np.array(pair_arr_CH2)
+
+        else:
+
+            pair_arr_CH1 = np.array(pair_arr_CH1)
+            pair_arr_CH2 = shift_peaks(np.array(pair_arr_CH2), shift = [-shift[0], -shift[1]])
+            out_pair_arr_CH2 = pair_arr_CH2[(pair_arr_CH2[:,1] <= 502) & (pair_arr_CH2[:,1] >= 266) & (pair_arr_CH2[:, 0] <= 502) & (pair_arr_CH2[:, 0] >= 10)]
+            out_pair_arr_CH1 = pair_arr_CH1[(pair_arr_CH2[:,1] <= 502) & (pair_arr_CH2[:,1] >= 266) & (pair_arr_CH2[:, 0] <= 502) & (pair_arr_CH2[:, 0] >= 10)]
+
     except Exception as e:
-        print(f"Error finding linear pairs: {e}")
+        print(f"Error finding pairs: {e}")
         return None
-    pair_arr_CH1 = np.array(pair_arr_CH1)
-    pair_arr_CH2 = np.array(pair_arr_CH2)
-    return pair_count, pair_arr_CH1, pair_arr_CH2
+
+    return len(out_pair_arr_CH1), out_pair_arr_CH1, out_pair_arr_CH2
 
 
 def find_polyfit_params(peaks_1, peaks_2, degree=2):
@@ -802,3 +810,17 @@ def calc_FRET(I_D_list, I_A_list):
 def calc_distance(FRET_list, R_0):
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
+
+def find_polyfit_params_3CH(peaks_1, peaks_2, peaks_3, degree=2):
+    y1, x1 = peaks_1[:, 0], peaks_1[:, 1] 
+    y2, x2 = peaks_2[:, 0], peaks_2[:, 1] 
+    y3, x3 = peaks_3[:, 0], peaks_3[:, 1]
+
+    # Fit polynomials for x and y separately
+    params_x_12 = np.polyfit(x1, x2, degree)  # Fit x transformation
+    params_y_12 = np.polyfit(y1, y2, degree)  # Fit y transformation
+    params_x_13 = np.polyfit(x1, x3, degree)  # Fit x transformation
+    params_y_13 = np.polyfit(y1, y3, degree)  # Fit y transformation
+
+
+    return params_x_12, params_y_12, params_x_13, params_y_13 # Returns polynomial coefficients
