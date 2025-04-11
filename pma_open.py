@@ -458,7 +458,7 @@ def DG_background_subtraction(pma_file_path, radius, y_centre_arr, x_centre_arr,
     return corrected_frames_data
 
 
-def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
+def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6, CH1_zoom_axes=[0.75, 0.6, 0.2, 0.2], CH2_zoom_axes=[0.75, 0.3, 0.2, 0.2]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     for scatter, peaks, label in scatter_data:
@@ -495,7 +495,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1
                 ax_zoom_CH1.set_yticks([])
                 ax_zoom_CH1.set_title("")
                 ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH2})")
-                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='b', facecolor='none')
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1, edgecolor='g', facecolor='none')
                 ax.add_patch(rect1)
                 ax_zoom_CH2.clear()
             
@@ -504,7 +504,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6,CH1
                 ax_zoom_CH2.set_xticks([])
                 ax_zoom_CH2.set_yticks([])
                 ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
-                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='g', facecolor='none')
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1, edgecolor='b', facecolor='none')
                 ax.add_patch(rect2)
                 
 
