@@ -905,3 +905,46 @@ def find_polyfit_params_3CH(peaks_1, peaks_2, peaks_3, degree=2):
 
 
     return params_x_12, params_y_12, params_x_13, params_y_13 # Returns polynomial coefficients
+
+def find_trip(peaks_1, mapped_CH2, mapped_CH3, tolerance=4, shift_CH2=[0,0], shift_CH3=[0,0]):
+
+    matched_CH1 = []
+    matched_CH2 = []
+    matched_CH3 = []
+
+    gp1_list = [tuple(peak) for peak in peaks_1]
+    mapped_CH2_set = set([tuple(peak) for peak in mapped_CH2])
+    mapped_CH3_set = set([tuple(peak) for peak in mapped_CH3])
+
+    for ch1_peak in gp1_list:
+        y1, x1 = ch1_peak
+
+        ch2_match = None
+        for ch2_peak in mapped_CH2_set:
+            y2, x2 = ch2_peak
+            if abs(y1 - y2) <= tolerance and abs(x2 - x1 - 171) <= tolerance:
+                ch2_match = ch2_peak
+                break
+
+        ch3_match = None
+        for ch3_peak in mapped_CH3_set:
+            y3, x3 = ch3_peak
+            if abs(y1 - y3) <= tolerance and abs(x3 - x1 - 342) <= tolerance:
+                ch3_match = ch3_peak
+                break
+
+        # If both matches exist, store the triplet
+        if ch2_match is not None and ch3_match is not None:
+            matched_CH1.append(ch1_peak)
+            matched_CH2.append(ch2_match)
+            matched_CH3.append(ch3_match)
+    
+    matched_CH1 = np.array(matched_CH1)
+    matched_CH2 = shift_peaks(np.array(matched_CH2), shift=[-shift_CH2[0], -shift_CH2[1]])
+    matched_CH3 = shift_peaks(np.array(matched_CH3), shift=[-shift_CH3[0], -shift_CH3[1]])
+    out_pair_arr_CH2 = matched_CH2[(matched_CH3[:,1] <= 502) & (matched_CH3[:,1] >= 352) & (matched_CH3[:, 0] <= 502) & (matched_CH3[:, 0] >= 10) & (matched_CH2[:,1] <= 332) & (matched_CH2[:,1] >= 171) & (matched_CH2[:, 0] <= 502) & (matched_CH2[:, 0] >= 10)]
+    out_pair_arr_CH1 = matched_CH1[(matched_CH3[:,1] <= 502) & (matched_CH3[:,1] >= 352) & (matched_CH3[:, 0] <= 502) & (matched_CH3[:, 0] >= 10) & (matched_CH2[:,1] <= 332) & (matched_CH2[:,1] >= 171) & (matched_CH2[:, 0] <= 502) & (matched_CH2[:, 0] >= 10)]
+    out_pair_arr_CH3 = matched_CH3[(matched_CH3[:,1] <= 502) & (matched_CH3[:,1] >= 352) & (matched_CH3[:, 0] <= 502) & (matched_CH3[:, 0] >= 10) & (matched_CH2[:,1] <= 332) & (matched_CH2[:,1] >= 171) & (matched_CH2[:, 0] <= 502) & (matched_CH2[:, 0] >= 10)]
+
+    return len(out_pair_arr_CH1), out_pair_arr_CH1, out_pair_arr_CH2, out_pair_arr_CH3
+
