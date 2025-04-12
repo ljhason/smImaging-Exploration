@@ -948,3 +948,67 @@ def find_trip(peaks_1, mapped_CH2, mapped_CH3, tolerance=4, shift_CH2=[0,0], shi
 
     return len(out_pair_arr_CH1), out_pair_arr_CH1, out_pair_arr_CH2, out_pair_arr_CH3
 
+
+def display_three_peaks(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6, CH1_zoom_axes=[0.2, 0.05, 0.15, 0.15], CH2_zoom_axes=[0.4, 0.05, 0.15, 0.15], CH3_zoom_axes=[0.6, 0.05, 0.15, 0.15]):
+    """ Checks if the mouse hovers over a point and updates annotation """
+    visible = False
+    for scatter, peaks, label in scatter_data:
+        cont, ind = scatter.contains(event)
+        if cont:
+            update_annot(ind, scatter, peaks, label)
+            visible = True
+            idx = ind['ind'][0]
+
+            if event.name == "button_press_event":
+                for patch in ax.patches:
+                    patch.remove()
+                    
+                for ax_zoom in fig.axes:
+                    if ax_zoom is not ax:  # Keep the main axis
+                        fig.delaxes(ax_zoom)
+
+                ax_zoom_CH1 = fig.add_axes(CH1_zoom_axes)
+                ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
+                ax_zoom_CH3 = fig.add_axes(CH3_zoom_axes)
+
+                y_CH1, x_CH1 = scatter_data[0][1][idx]
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                y_CH2, x_CH2 = scatter_data[1][1][idx]
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                y_CH3, x_CH3 = scatter_data[2][1][idx]
+                x1_CH3, x2_CH3 = max(0, x_CH3 - zoom_size), min(image_3d.shape[1], x_CH3 + zoom_size+1)
+                y1_CH3, y2_CH3 = max(0, y_CH3 - zoom_size), min(image_3d.shape[0], y_CH3 + zoom_size+1)
+
+                zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
+                zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
+                zoomed_image_CH3 = image_orig[y1_CH3:y2_CH3, x1_CH3:x2_CH3]
+
+                ax_zoom_CH1.clear()
+                ax_zoom_CH1.imshow(zoomed_image_CH1, cmap="gray")
+                ax_zoom_CH1.set_xticks([])
+                ax_zoom_CH1.set_yticks([])
+                ax_zoom_CH1.set_title(f"Zoomed In ({y_CH1}, {x_CH2})")
+                rect1 = patches.Rectangle((x1_CH1, y1_CH1), x2_CH1 - x1_CH1, y2_CH1 - y1_CH1, linewidth=1.5, edgecolor='g', facecolor='none')
+                ax.add_patch(rect1)
+                ax_zoom_CH2.clear()
+            
+                
+                ax_zoom_CH2.imshow(zoomed_image_CH2, cmap="gray")
+                ax_zoom_CH2.set_xticks([])
+                ax_zoom_CH2.set_yticks([])
+                ax_zoom_CH2.set_title(f"Zoomed In ({y_CH2}, {x_CH2})")
+                rect2 = patches.Rectangle((x1_CH2, y1_CH2), x2_CH2 - x1_CH2, y2_CH2 - y1_CH2, linewidth=1.5, edgecolor='b', facecolor='none')
+                ax.add_patch(rect2)
+
+                ax_zoom_CH3.clear()
+                ax_zoom_CH3.imshow(zoomed_image_CH3, cmap="gray")
+                ax_zoom_CH3.set_xticks([])
+                ax_zoom_CH3.set_yticks([])
+                ax_zoom_CH3.set_title(f"Zoomed In ({y_CH3}, {x_CH3})")
+                rect3 = patches.Rectangle((x1_CH3, y1_CH3), x2_CH3 - x1_CH3, y2_CH3 - y1_CH3, linewidth=1.5, edgecolor='purple', facecolor='none')
+                ax.add_patch(rect3)
+
+    annot.set_visible(visible)
+    fig.canvas.draw_idle()
