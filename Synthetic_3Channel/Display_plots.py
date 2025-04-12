@@ -61,13 +61,13 @@ ax.grid()
 scat1 = ax.scatter(out_pair_arr_CH1[:,1], out_pair_arr_CH1[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
 scat2 = ax.scatter(out_pair_arr_CH2[:,1], out_pair_arr_CH2[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
 scat3 = ax.scatter(out_pair_arr_CH3[:,1], out_pair_arr_CH3[:,0], s=50, facecolors='none', edgecolors='r', alpha=0)
-ax.set_title("Mapped Peaks: Click to Zoom in on a Peak")
+ax.set_title("Mapped Peaks: Click to display")
 
 scatter_data = [(scat1, out_pair_arr_CH1, "CH1"), (scat2, out_pair_arr_CH2, "CH2"), (scat3, out_pair_arr_CH3, "CH3")]
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: display_three_peaks(event, fig, ax, scatter_data, image_copy, hel1_avg_image, zoom_size=6))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: display_three_peaks(event, fig, ax, scatter_data, image_copy, hel1_avg_image, zoom_size=6))
-
+fig.canvas.mpl_connect("button_press_event", lambda event: display_three_plots(event, hel1_file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, hel1_avg_image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), tpf=1/5, background_treatment="DG", CH_consideration="True"))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: display_three_plots(event, hel1_file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, hel1_avg_image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), tpf=1/5, background_treatment="DG", CH_consideration="True"))
 plt.show()
+    
