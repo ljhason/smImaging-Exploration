@@ -3,7 +3,8 @@ import os
 import numpy as np
 import struct
 import matplotlib.pyplot as plt
-import cv2
+# import cv2
+import imageio.v2 as imageio
 from skimage import io
 from PIL import Image
 from skimage.feature import peak_local_max
@@ -69,6 +70,43 @@ def generate_images(pma_file_path):
         return None
     
 
+# def generate_mp4(images_path, fps=100):
+#     try:
+#         pma_name = f"{images_path.split('_')[-2]}"
+#         video_name = f"{pma_name}.mp4"
+#         video_file= os.path.join(images_path, f"{pma_name}_Video")
+        
+#         if not os.path.exists(video_file):
+#             os.makedirs(video_file)
+#         else:
+#             print(f"Directory already exists: {video_file}")
+#             return None
+            
+#         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
+#         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
+#         frame = cv2.imread(os.path.join(images_path, images[0]))
+#         height, width,_ = frame.shape
+#         video = cv2.VideoWriter(os.path.join(video_file, video_name), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
+#         for image in images:
+#             video.write(cv2.imread(os.path.join(images_path, image)))
+
+#         video.release()
+#         cv2.destroyAllWindows()
+
+#         print(f"Video sucessfully generated and saved as: {video_name}")
+#         print(f"Images: {(images)}")
+    
+#     except Exception as e:
+#         print(f"Error generating video: {e}")
+#         #delete the directory
+#         if os.path.exists(video_file):
+#             os.rmdir(video_file)
+#         else:
+#             print(f"Directory does not exist: {video_file}")
+#         return None
+    
+# import imageio.v2 as imageio
 def generate_mp4(images_path, fps=100):
     try:
         pma_name = f"{images_path.split('_')[-2]}"
@@ -83,18 +121,17 @@ def generate_mp4(images_path, fps=100):
             
         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
-        frame = cv2.imread(os.path.join(images_path, images[0]))
-        height, width,_ = frame.shape
-        video = cv2.VideoWriter(os.path.join(video_file, video_name), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+        out_path = os.path.join(video_file, video_name)
+        writer = imageio.get_writer(out_path, fps=fps)
 
         for image in images:
-            video.write(cv2.imread(os.path.join(images_path, image)))
+            img_path = os.path.join(images_path, image)
+            frame = imageio.imread(img_path)
+            writer.append_data(frame)
 
-        video.release()
-        cv2.destroyAllWindows()
-
-        print(f"Video sucessfully generated and saved as: {video_name}")
-        print(f"Images: {(images)}")
+        writer.close()
+        print(f"Video sucessfully generated and saved as: {out_path}")
+        print(f"Images: {(images[:5])}...{(images[-5:])}")  # Show first and last 10 images
     
     except Exception as e:
         print(f"Error generating video: {e}")
@@ -172,24 +209,24 @@ def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
 #Same Good Peaks as in img_avg.ipynb file
 def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
-    large_peaks = []
-    correct_size_peaks = []
+    bad_peaks = []
+    good_peaks = []
     height, width = io.imread(image_path).shape
 
     for peak in peaks_coords_IDL:
         y, x = peak
         # Extract the peak region, if pixels outside of 5x5 region are non-zero, then append peak to large_peaks
         if y < boarder or y > height - boarder or x < boarder or x > width - boarder:
-            large_peaks.append(peak)
-        elif image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad, x] > 0 or peak[0] < boarder or peak[0] > height - boarder or peak[1] < boarder or peak[1] > width - boarder:
-            large_peaks.append(peak)
+            bad_peaks.append(peak)
+        elif image_2[y, x + max_rad+1] > 0 or image_2[y, x - max_rad-1] > 0 or image_2[y+max_rad+1, x ] > 0 or image_2[y-max_rad-1, x] > 0:
+            bad_peaks.append(peak)
         else:
-            correct_size_peaks.append(peak)
+            good_peaks.append(peak)
 
-    correct_size_peaks = np.array(correct_size_peaks)
-    large_peaks = np.array(large_peaks)
+    good_peaks = np.array(good_peaks)
+    bad_peaks = np.array(bad_peaks)
     
-    return correct_size_peaks, large_peaks
+    return good_peaks, bad_peaks
 
 def shift_peaks(peaks, shift=[0, 256]):
     return np.add(peaks, shift)
