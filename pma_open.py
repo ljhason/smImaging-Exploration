@@ -517,11 +517,11 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6, CH
                 ax_zoom_CH2 = fig.add_axes(CH2_zoom_axes)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -552,7 +552,7 @@ def on_hover(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6, CH
 def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=5.6, time_interval=1, background_treatment = "None", CH_consideration=False, Intense_axes_CH1=[0.48, 0.81, 0.5, 0.15], Intense_axes_CH2=[0.48, 0.56, 0.5, 0.15], FRET_axes=[0.48, 0.31, 0.5, 0.15], dist_axes=[0.48, 0.06, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.22, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
-    zoom_size=6
+    zoom_size=5
     for scatter, peaks, label in scatter_data:
         cont, ind = scatter.contains(event)
         if cont:
@@ -585,11 +585,11 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
                 ax_dist = fig.add_axes(dist_axes)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -682,7 +682,7 @@ def on_hover_intensity(event, pma_file_path, fig, ax, scatter_data, y_centre_arr
 def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0=5.6, time_interval=1, background_treatment = "None", CH_consideration=False, Intense_axes=[0.48, 0.6, 0.5, 0.3], FRET_axes=[0.48, 0.35, 0.5, 0.15], dist_axes=[0.48, 0.1, 0.5, 0.15], CH1_zoom_axes=[0.04, 0.06, 0.15, 0.15], CH2_zoom_axes=[0.23, 0.06, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
-    zoom_size=6
+    zoom_size=5
     for scatter, peaks, label in scatter_data:
         cont, ind = scatter.contains(event)
         if cont:
@@ -715,11 +715,11 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
                 ax_dist = fig.add_axes(dist_axes)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -855,6 +855,7 @@ def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_
     tot_intensity_all_frames_CH2 = []
     y_centre_arr = np.concatenate((donor_arr[:, 0], acceptor_arr[:, 0]))
     x_centre_arr = np.concatenate((donor_arr[:, 1], acceptor_arr[:, 1]))
+    
     if background_treatment == "None":
         Frames_data = read_pma(pma_file_path)
     elif background_treatment == "SG":
@@ -884,7 +885,7 @@ def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_
     
     fig, ax = plt.subplots(4, 1, figsize=figsize)
     fig.subplots_adjust(hspace=1)
-    ax[0].plot(time, tot_intensity_all_frames_CH1, color='b')
+    ax[0].plot(time, tot_intensity_all_frames_CH1, color='g')
     ax[0].set_title(f'Intensity v Time in Donor Peak {peak_idx}')
     ax[0].set_ylabel('Intensity')
     ax[0].set_xlabel('Time (s)')
@@ -895,7 +896,7 @@ def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_
     ax[0].yaxis.set_major_locator(MultipleLocator(CH1_intensity_interval))  # 500-unit intervals for y-axis
 
 
-    ax[1].plot(time, tot_intensity_all_frames_CH2, color='g')
+    ax[1].plot(time, tot_intensity_all_frames_CH2, color='b')
     ax[1].set_title(f'Intensity v Time in Acceptor Peak {peak_idx}')
     ax[1].set_ylabel('Intensity')
     ax[1].set_xlabel('Time (s)')
@@ -923,8 +924,8 @@ def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_
     ax[3].grid()
     ax[3].set_xlim(0, time[-1])
     ax[3].xaxis.set_major_locator(MultipleLocator(time_interval))  # 1-second intervals for x-axis
-    
     plt.show()
+    print(f"Peak Coordinates: CH1 = [{y_CH1}, {x_CH1}], CH2 = [{y_CH2}, {x_CH2}]")
 
 
 def find_polyfit_params_3CH(peaks_1, peaks_2, peaks_3, degree=2):
@@ -984,7 +985,7 @@ def find_trip(peaks_1, mapped_CH2, mapped_CH3, tolerance=4, shift_CH2=[0,0], shi
     return len(out_pair_arr_CH1), out_pair_arr_CH1, out_pair_arr_CH2, out_pair_arr_CH3
 
 
-def display_three_peaks(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=6, CH1_zoom_axes=[0.28, 0.05, 0.15, 0.15], CH2_zoom_axes=[0.425, 0.05, 0.15, 0.15], CH3_zoom_axes=[0.57, 0.05, 0.15, 0.15]):
+def display_three_peaks(event, fig, ax, scatter_data, image_3d, image_orig, zoom_size=5, CH1_zoom_axes=[0.28, 0.05, 0.15, 0.15], CH2_zoom_axes=[0.425, 0.05, 0.15, 0.15], CH3_zoom_axes=[0.57, 0.05, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
     visible = False
     for scatter, peaks, label in scatter_data:
@@ -1007,14 +1008,14 @@ def display_three_peaks(event, fig, ax, scatter_data, image_3d, image_orig, zoom
                 ax_zoom_CH3 = fig.add_axes(CH3_zoom_axes)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
                 y_CH3, x_CH3 = scatter_data[2][1][idx]
-                x1_CH3, x2_CH3 = max(0, x_CH3 - zoom_size), min(image_3d.shape[1], x_CH3 + zoom_size+1)
-                y1_CH3, y2_CH3 = max(0, y_CH3 - zoom_size), min(image_3d.shape[0], y_CH3 + zoom_size+1)
+                x1_CH3, x2_CH3 = max(0, x_CH3 - zoom_size), min(image_3d.shape[1], x_CH3 + zoom_size)
+                y1_CH3, y2_CH3 = max(0, y_CH3 - zoom_size), min(image_3d.shape[0], y_CH3 + zoom_size)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]
@@ -1049,7 +1050,7 @@ def display_three_peaks(event, fig, ax, scatter_data, image_3d, image_orig, zoom
     fig.canvas.draw_idle()
 
 
-def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0_1=5.6, R_0_2=5.6, time_interval=10, intensity_interval=500, FRET_interval=0.2, distance_1_interval=0.5, distance_2_interval=0.2, zoom_size=6, background_treatment="None", CH_consideration=False, Intense_axes=[0.48, 0.81, 0.5, 0.15], FRET_axes = [0.48, 0.56, 0.5, 0.15], distance_axes_1=[0.48, 0.31, 0.5, 0.15], distance_axes_2=[0.48, 0.06, 0.5, 0.15],  CH1_zoom_axes=[0.0005, 0.05, 0.15, 0.15], CH2_zoom_axes=[0.135, 0.05, 0.15, 0.15], CH3_zoom_axes=[0.27, 0.05, 0.15, 0.15]):
+def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_arr, x_centre_arr, image_3d, image_orig, mask, radius=4, tpf=1/100, R_0_1=5.6, R_0_2=5.6, time_interval=10, intensity_interval=500, FRET_interval=0.2, distance_1_interval=0.5, distance_2_interval=0.2, zoom_size=5, background_treatment="None", CH_consideration=False, Intense_axes=[0.48, 0.81, 0.5, 0.15], FRET_axes = [0.48, 0.56, 0.5, 0.15], distance_axes_1=[0.48, 0.31, 0.5, 0.15], distance_axes_2=[0.48, 0.06, 0.5, 0.15],  CH1_zoom_axes=[0.0005, 0.05, 0.15, 0.15], CH2_zoom_axes=[0.135, 0.05, 0.15, 0.15], CH3_zoom_axes=[0.27, 0.05, 0.15, 0.15]):
     """ Checks if the mouse hovers over a point and updates annotation """
  
     visible = False
@@ -1087,14 +1088,14 @@ def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_ar
                 ax_distance_2 = fig.add_axes(distance_axes_2)
 
                 y_CH1, x_CH1 = scatter_data[0][1][idx]
-                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size+1)
-                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size+1)
+                x1_CH1, x2_CH1 = max(0, x_CH1 - zoom_size), min(image_3d.shape[1], x_CH1 + zoom_size)
+                y1_CH1, y2_CH1 = max(0, y_CH1 - zoom_size), min(image_3d.shape[0], y_CH1 + zoom_size)
                 y_CH2, x_CH2 = scatter_data[1][1][idx]
-                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size+1)
-                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size+1)
+                x1_CH2, x2_CH2 = max(0, x_CH2 - zoom_size), min(image_3d.shape[1], x_CH2 + zoom_size)
+                y1_CH2, y2_CH2 = max(0, y_CH2 - zoom_size), min(image_3d.shape[0], y_CH2 + zoom_size)
                 y_CH3, x_CH3 = scatter_data[2][1][idx]
-                x1_CH3, x2_CH3 = max(0, x_CH3 - zoom_size), min(image_3d.shape[1], x_CH3 + zoom_size+1)
-                y1_CH3, y2_CH3 = max(0, y_CH3 - zoom_size), min(image_3d.shape[0], y_CH3 + zoom_size+1)
+                x1_CH3, x2_CH3 = max(0, x_CH3 - zoom_size), min(image_3d.shape[1], x_CH3 + zoom_size)
+                y1_CH3, y2_CH3 = max(0, y_CH3 - zoom_size), min(image_3d.shape[0], y_CH3 + zoom_size)
 
                 zoomed_image_CH1 = image_orig[y1_CH1:y2_CH1, x1_CH1:x2_CH1]
                 zoomed_image_CH2 = image_orig[y1_CH2:y2_CH2, x1_CH2:x2_CH2]

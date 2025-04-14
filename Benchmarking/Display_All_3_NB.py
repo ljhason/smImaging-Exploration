@@ -54,7 +54,7 @@ ax.grid()
 
 scat1 = ax.scatter(poly_pair_arr_CH1[:,1], poly_pair_arr_CH1[:,0], s=50, facecolors='none', edgecolors='g', alpha=0)
 scat2 = ax.scatter(poly_pair_arr_CH2[:,1], poly_pair_arr_CH2[:,0], s=50, facecolors='none', edgecolors='b', alpha=0)
-ax.set_title("Mapped Peaks: Click For Plots")
+ax.set_title(f"Mapped Peaks ({poly_pair_count} Pairs): Click For Plots")
 
 scatter_data = [(scat1, poly_pair_arr_CH1 , "CH1"), (scat2, poly_pair_arr_CH2, "CH2")]
 

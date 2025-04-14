@@ -35,7 +35,7 @@ plt.axvline(x= 128, color='w', linestyle='--')
 plt.axvline(x= 384, color='w', linestyle='--')
 
 plt.axvline(x= 256, color='w', linestyle='-')
-plt.suptitle("CH1 and CH2 Identified Peaks", fontsize=16)
+plt.suptitle(f"CH1 and CH2 Identified Peaks ({len(good_peaks_1)})", fontsize=16)
 plt.title("Hover over points to see peak index and coordinates \n Click on peaks to print peak info in terminal \n Indentify and select corresponding peaks in CH1 and CH2 from each section of the image", fontsize=10)
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
