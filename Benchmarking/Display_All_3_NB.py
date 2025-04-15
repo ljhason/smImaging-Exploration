@@ -60,7 +60,7 @@ scatter_data = [(scat1, poly_pair_arr_CH1 , "CH1"), (scat2, poly_pair_arr_CH2, "
 
 annot = init_annot(ax=ax)
 
-fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/5, time_interval=10, background_treatment="None", CH_consideration=True))
-fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image,  mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/5, time_interval=10, background_treatment="None", CH_consideration=True))
+fig.canvas.mpl_connect("button_press_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image, mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/5, time_interval=10, background_treatment="DG", CH_consideration=False))
+fig.canvas.mpl_connect("motion_notify_event", lambda event: on_hover_intensity_merged(event, file_path, fig, ax, scatter_data, y_centres, x_centres, image_copy, image,  mask = (circle_array_new == [255, 255, 0]).all(axis=-1), radius=4, tpf=1/5, time_interval=10, background_treatment="DG", CH_consideration=False))
 
 plt.show()
