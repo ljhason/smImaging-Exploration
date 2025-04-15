@@ -1166,8 +1166,8 @@ def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_ar
                 FRET_values_1 = calc_FRET(tot_intensity_all_frames_CH1, tot_intensity_all_frames_CH2)
                 FRET_values_2 = calc_FRET(tot_intensity_all_frames_CH2, tot_intensity_all_frames_CH3)           
                 ax_FRET.clear()
-                ax_FRET.plot(time, FRET_values_1, color='g', label='CH1-CH2')
-                ax_FRET.plot(time, FRET_values_2, color='b', label='CH2-CH3')
+                ax_FRET.plot(time, FRET_values_1, color='r', label='CH1-CH2')
+                ax_FRET.plot(time, FRET_values_2, color='c', label='CH2-CH3')
                 ax_FRET.set_title("FRET v Time")
                 ax_FRET.set_xlabel("Time (s)")
                 ax_FRET.set_ylabel("Intensity")
@@ -1181,7 +1181,7 @@ def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_ar
                 distance_1 = calc_distance(FRET_values_1, R_0_1)
 
                 ax_distance_1.clear()
-                ax_distance_1.plot(time, distance_1, color='g')
+                ax_distance_1.plot(time, distance_1, color='r')
                 ax_distance_1.set_title("CH1-CH2 Distance v Time")
                 ax_distance_1.set_xlabel("Time (s)")
                 ax_distance_1.set_ylabel("Distance (nm)")
@@ -1192,7 +1192,7 @@ def display_three_plots(event, pma_file_path, fig, ax, scatter_data, y_centre_ar
                 
                 distance_2 = calc_distance(FRET_values_2, R_0_2)
                 ax_distance_2.clear()
-                ax_distance_2.plot(time, distance_2, color='b')
+                ax_distance_2.plot(time, distance_2, color='c')
                 ax_distance_2.set_title("CH2-CH3 Distance v Time")
                 ax_distance_2.set_xlabel("Time (s)")
                 ax_distance_2.set_ylabel("Distance (nm)")
