@@ -2,7 +2,6 @@ from pathlib import Path
 import sys
 
 current_file_path = Path(__file__)
-# Get the parent directory of the current directory (i.e., SummerProject)
 parent_directory = current_file_path.parent.parent
 sys.path.append(str(parent_directory))
 from pma_open import *
