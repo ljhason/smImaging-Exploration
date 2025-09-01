@@ -1,9 +1,7 @@
-import sys
 import os
 import numpy as np
 import struct
 import matplotlib.pyplot as plt
-# import cv2
 import imageio.v2 as imageio
 from skimage import io
 from PIL import Image
@@ -12,6 +10,10 @@ from matplotlib import patches
 from matplotlib.ticker import MultipleLocator
 
 def read_pma_f0(pma_file_path):
+    """
+    Reads the first frame of a .pma file and returns a 2D numpy array.
+    Assumes little endian format.
+    """
     try:
         with open(pma_file_path, "rb") as f:
             #Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
@@ -25,7 +27,8 @@ def read_pma_f0(pma_file_path):
 
             #Read the binary image data
             frame_data0 = f.read(X_pixels * Y_pixels)
-
+            
+            # Reshape frame data to arrays of shape (Y_pixels, X_pixels)
             image_data = np.frombuffer(frame_data0, dtype=np.uint8).reshape((Y_pixels, X_pixels))
 
             return image_data
@@ -34,7 +37,12 @@ def read_pma_f0(pma_file_path):
         print(f"Error reading .pma file: {e}")
         return None
 
+
 def read_pma(pma_file_path):
+    """
+    Reads a .pma file and returns an array of 2D numpy arrays.
+    Assumes little endian format.
+    """
     try:
         with open(pma_file_path, "rb") as f:
             # Assign X_pixels and Y_pixels as the first two 16-bit integers in the file
@@ -53,6 +61,9 @@ def read_pma(pma_file_path):
         return None
     
 def generate_images(pma_file_path):
+    """
+    Generates PNG images from a .pma file and saves them in a directory.
+    """
     try:
         output_name = pma_file_path.split(".")[-2].split("/")[-1]
         if not os.path.exists(f"{output_name}_Files"):
@@ -62,6 +73,8 @@ def generate_images(pma_file_path):
             return None
         
         Frames_data = read_pma(pma_file_path)
+        
+        # Save each frame as a PNG image
         for frame_idx, frame_data in enumerate(Frames_data):
             plt.imsave(f"{output_name}_Files/{output_name}frame_{frame_idx}.png", frame_data, cmap='gray')
 
@@ -70,44 +83,10 @@ def generate_images(pma_file_path):
         return None
     
 
-# def generate_mp4(images_path, fps=100):
-#     try:
-#         pma_name = f"{images_path.split('_')[-2]}"
-#         video_name = f"{pma_name}.mp4"
-#         video_file= os.path.join(images_path, f"{pma_name}_Video")
-        
-#         if not os.path.exists(video_file):
-#             os.makedirs(video_file)
-#         else:
-#             print(f"Directory already exists: {video_file}")
-#             return None
-            
-#         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
-#         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
-#         frame = cv2.imread(os.path.join(images_path, images[0]))
-#         height, width,_ = frame.shape
-#         video = cv2.VideoWriter(os.path.join(video_file, video_name), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
-
-#         for image in images:
-#             video.write(cv2.imread(os.path.join(images_path, image)))
-
-#         video.release()
-#         cv2.destroyAllWindows()
-
-#         print(f"Video sucessfully generated and saved as: {video_name}")
-#         print(f"Images: {(images)}")
-    
-#     except Exception as e:
-#         print(f"Error generating video: {e}")
-#         #delete the directory
-#         if os.path.exists(video_file):
-#             os.rmdir(video_file)
-#         else:
-#             print(f"Directory does not exist: {video_file}")
-#         return None
-    
-# import imageio.v2 as imageio
 def generate_mp4(images_path, fps=100):
+    """
+    Generates an mp4 from the image path, using a default frames per second of 100.
+    """
     try:
         pma_name = f"{images_path.split('_')[-2]}"
         video_name = f"{pma_name}.mp4"
@@ -118,7 +97,7 @@ def generate_mp4(images_path, fps=100):
         else:
             print(f"Directory already exists: {video_file}")
             return None
-            
+         
         images = [img for img in os.listdir(images_path) if img.endswith(".png")]
         images.sort(key=lambda x: int(x.split("_")[1].split(".")[0]))
         out_path = os.path.join(video_file, video_name)
@@ -135,7 +114,8 @@ def generate_mp4(images_path, fps=100):
     
     except Exception as e:
         print(f"Error generating video: {e}")
-        #delete the directory
+        
+        #Delete the directory
         if os.path.exists(video_file):
             os.rmdir(video_file)
         else:
@@ -143,8 +123,10 @@ def generate_mp4(images_path, fps=100):
         return None
     
 def avg_frame_arr(pma_file_path):
+    """
+    Generates an average frame from a .pma file and returns it as a 2D numpy array.
+    """
     try:
-
         Frames_data = read_pma(pma_file_path)
         avg_frame_data = np.mean(Frames_data, axis=0).astype(np.uint8)
         print(f"Sucessfully generated average frame")
@@ -156,6 +138,9 @@ def avg_frame_arr(pma_file_path):
 
 
 def avg_frame_png(pma_file_path):
+    """
+    Generates an average frame from a .pma file and saves it as a PNG image.
+    """
     try:
         avg_frame_data = avg_frame_arr(pma_file_path)
         output_name = pma_file_path.split(".")[-2].split("/")[-1]
@@ -173,9 +158,16 @@ def avg_frame_png(pma_file_path):
         return None
 
 def dim_to_3(image):
+    """ Converts a 2D grayscale image to a 3D RGB image"""
     return np.stack((image,) * 3, axis=-1)
 
 def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
+    """
+    Finds peaks in an image using a method similar to IDL's peak finding.
+    Calculates and removes background from the original image.
+
+    Returns the coordinates of identified peaks and the background-subtracted image.
+    """
     std = 4*sigma
     # Load image (assumes grayscale uint8 image)
     image = io.imread(image_path, as_gray=True).astype(np.uint8)
@@ -208,6 +200,12 @@ def find_peaks_scipy_IDL(image_path, sigma=3, block_size=16, scaler_percent=32):
 
 #Same Good Peaks as in img_avg.ipynb file
 def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boarder=10, max_rad=3):
+    """
+    Identifies good peaks in an image by filtering out peaks that are:
+    1. too close to the border
+        or
+    2. have a radius below a max_rad
+    """
     peaks_coords_IDL, image_2 = find_peaks_scipy_IDL(image_path, sigma, block_size, scaler_percent)
     bad_peaks = []
     good_peaks = []
@@ -229,16 +227,21 @@ def good_peak_finder(image_path, sigma=3, block_size=16, scaler_percent=32, boar
     return good_peaks, bad_peaks
 
 def shift_peaks(peaks, shift=[0, 256]):
+    """
+    Shift peak coordinates by [0, 256]
+    """
     return np.add(peaks, shift)
 
-#change the arrow colour to white
+
 def init_annot(ax, text="", xy=(0, 0), xytext=(0, 10),textcoords="offset points", bbox=dict(boxstyle="round", fc="w"), arrowprops=dict(arrowstyle="->", color="w")):
+    """
+    Initializes the annotation object for interactive plots.
+    """
     global annot
     annot = ax.annotate(text, xy=xy, xytext=xytext, textcoords=textcoords, bbox=bbox, arrowprops=arrowprops)
     annot.set_visible(False)
     return annot
 
-# Function to update annotation text and position
 def update_annot(ind, scatter, peaks, label):
     """ Updates the annotation position and text """
     idx = ind["ind"][0]
@@ -264,6 +267,12 @@ def print_coords_trigger(event, fig, scatter_data):
     fig.canvas.draw_idle()
 
 def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2, shift=[0,0]):
+    """
+    Finds pairs between peak coordinates from channel 1 and 2.
+    Tolerance is the maximum distance between two peaks to be considered a pair.
+    A linear shift can be applied to channel 2 peaks before pairing.
+    """
+
     # peaks_2 coordinates goes from [0, 512] to [256,512]
     gp1_list = [tuple(peak) for peak in peaks_1]
     gp2_list = [tuple(peak) for peak in peaks_2]
@@ -308,6 +317,9 @@ def find_pairs(peaks_1, peaks_2, tolerance=1, Channel_count=2, shift=[0,0]):
 
 
 def find_polyfit_params(peaks_1, peaks_2, degree=2):
+    """
+    Finds polynomial parameters that map peak coordinates from channel 1 to channel 2.
+    """
     y1, x1 = peaks_1[:, 0], peaks_1[:, 1] 
     y2, x2 = peaks_2[:, 0], peaks_2[:, 1] 
 
@@ -318,14 +330,20 @@ def find_polyfit_params(peaks_1, peaks_2, degree=2):
     return params_x, params_y  # Returns polynomial coefficients
 
 def apply_polyfit_params(CH1_peaks, params_x, params_y):
+    """
+    Applies polynomial parameters to transform peak coordinates from channel 1 to mapped channel 2 coordinates.
+    """
     y1, x1 = CH1_peaks[:, 0], CH1_peaks[:, 1]
     x_mapped = np.polyval(params_x, x1)  # Apply X transformation
     y_mapped = np.polyval(params_y, y1)  # Apply Y transformation
     return np.column_stack((y_mapped, x_mapped))  # Return transformed points
 
 
-# Midpoint circle algorithm 
+
 def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 0]):
+    """
+    Uses midpoint circle algorith to draw a circle on a 2D numpy array, centred on the peak's coordinate.
+    """
     circle_array = np.zeros((background_dim, background_dim, 3), dtype=np.uint8)
     # Midpoint circle algorithm
     y = radius
@@ -351,8 +369,11 @@ def draw_circle(radius, y_centre, x_centre, background_dim, colour = [255, 255, 
     
     return circle_array
 
-#changed the arguments, please edit in jupyter scripts!
+
 def plot_circle(image, y_centre, x_centre, radius=4, colour = [255, 255, 0]):
+    """"
+    Applies draw_circle to all peak coordinates and plots the circles on the image.
+    """
     circle_array = draw_circle(radius, y_centre, x_centre, image.shape[0])
     mask = (circle_array == [255, 255, 0]).all(axis=-1)
     try:
@@ -364,16 +385,16 @@ def plot_circle(image, y_centre, x_centre, radius=4, colour = [255, 255, 0]):
         print(f"Error plotting circle: {e}")
         return None
     
-    # Set the pixels in the mask to be yellow
+    # Sets the pixels in the mask to be yellow
     image_3d[mask] = colour
-    # Display the modified image
 
+    # Displays the modified image
     plt.imshow(image_3d)
     plt.show()
 
-def count_circle(radius, y_centre=12, x_centre=12):
+def count_circle(radius, y_centre=15, x_centre=15):
+    """ Counts the number of pixels in a circle of given radius """
     total = 0
-    #filling in the circle
     for i in range(x_centre - radius, x_centre + radius + 1):
         for j in range(y_centre - radius, y_centre + radius + 1):
             if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
@@ -382,6 +403,10 @@ def count_circle(radius, y_centre=12, x_centre=12):
     return total
 
 def SG_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, x_centre_arr, CH_consideration=False):
+    """"
+    Static Global background subtraction method, can also consider the background in each channel seperately or the background of the average frame as a whole.
+    Returns an array of frames data with static global background subtracted.
+    """
     frames_data = read_pma(pma_file_path) 
     height, width, _ = input_array.shape
     y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
@@ -443,7 +468,10 @@ def SG_background_subtraction(pma_file_path, input_array, radius, y_centre_arr, 
     return corrected_frames_data
 
 def DG_background_subtraction(pma_file_path, radius, y_centre_arr, x_centre_arr, CH_consideration=False):
-    
+    """"
+    Dynamic Global background subtraction method, can also consider the background in each channel seperately or the background of each frame as a whole.
+    Returns an array of frames data with dynamic global background subtracted.
+    """
     frames_data = read_pma(pma_file_path)
     height, width = frames_data[0].shape
     y_indices, x_indices = np.meshgrid(np.arange(height), np.arange(width), indexing="ij")
@@ -797,21 +825,10 @@ def on_hover_intensity_merged(event, pma_file_path, fig, ax, scatter_data, y_cen
     annot.set_visible(visible)
     fig.canvas.draw_idle()
 
-
-def count_circle(radius, y_centre=15, x_centre=15):
-    # x = radius
-    # y = 0
-    total = 0
-    #filling in the circle
-    for i in range(x_centre - radius, x_centre + radius + 1):
-        for j in range(y_centre - radius, y_centre + radius + 1):
-            if (i - x_centre) ** 2 + (j - y_centre) ** 2 < radius ** 2:
-                total +=1
-    
-    return total
-
 def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
-
+    """
+    Returns an array of the itensity of all peaks in a single frame and an array of peak intensities across that whole frame.
+    """
     intensity_arr_all_peaks = []
     total_arr = []
 
@@ -828,6 +845,9 @@ def sgl_frame_intense_arr(input_array, radius, y_centre_arr, x_centre_arr):
     return intensity_arr_all_peaks, total_arr
 
 def intensity_in_circle(input_array, radius, y_centre, x_centre):
+    """
+    Returns the integer total intensity in a peak circle and an array of the itensity of all peaks in a single frame.
+    """
     total_intensity = 0
     intensity_arr = []
     #filling in the circle
@@ -840,15 +860,24 @@ def intensity_in_circle(input_array, radius, y_centre, x_centre):
     return total_intensity, intensity_arr
 
 def calc_FRET(I_D_list, I_A_list):
+    """
+    Calculates FRET efficiency. Returns as a list.
+    """
     I_D, I_A = np.array(I_D_list), np.array(I_A_list)
     FRET_arr = I_A/(I_D + I_A)
     return FRET_arr.tolist()
 
 def calc_distance(FRET_list, R_0):
+    """
+    Calculates distance give FRET efficiency. Returns as a list.
+    """
     d = R_0 * ((1/np.array(FRET_list)) - 1)**(1/6)
     return d.tolist()
 
 def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_arr, tpf = 1/100, R_0=5.6, radius=4, time_interval=1, background_treatment = "None", CH_consideration=False, CH1_intensity_interval=500, CH2_intensity_interval=500, figsize=(15, 8)):
+    """
+    Displays the time series plots - Intensity v Time for both channels, FRET v Time and Distance v Time for a selected peak index.
+    """
     y_CH1, x_CH1 = donor_arr[peak_idx]
     y_CH2, x_CH2 = acceptor_arr[peak_idx]
     tot_intensity_all_frames_CH1 = []
@@ -929,6 +958,9 @@ def display_time_series(pma_file_path, avg_image, peak_idx, donor_arr, acceptor_
 
 
 def find_polyfit_params_3CH(peaks_1, peaks_2, peaks_3, degree=2):
+    """
+    Returns the polynomial coefficients for mapping channel 1 peak coordinates to channel 2 peak coordinates and mapping channel 1 peak coordinates to channel 3 peak coordinates.
+    """
     y1, x1 = peaks_1[:, 0], peaks_1[:, 1] 
     y2, x2 = peaks_2[:, 0], peaks_2[:, 1] 
     y3, x3 = peaks_3[:, 0], peaks_3[:, 1]
@@ -943,7 +975,13 @@ def find_polyfit_params_3CH(peaks_1, peaks_2, peaks_3, degree=2):
     return params_x_12, params_y_12, params_x_13, params_y_13 # Returns polynomial coefficients
 
 def find_trip(peaks_1, mapped_CH2, mapped_CH3, tolerance=4, shift_CH2=[0,0], shift_CH3=[0,0]):
+    """
+    Finds triplets between peak coordinates from channel 1, 2, and 3.
+    Tolerance is the maximum distance between two peaks to be considered a pair.
+    A linear shift can be applied to channel 2 and channel 3 peaks before pairing.
 
+    Returns the number of triplets found and the arrays of found peak coordinates in each channel.
+    """
     matched_CH1 = []
     matched_CH2 = []
     matched_CH3 = []
